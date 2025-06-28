@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班表管理工具 - 優化版</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 主題切換按鈕 -->
+    <button id="themeToggle" class="theme-toggle" title="切換主題">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- 載入畫面 -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>載入中...</p>
+    </div>
+
+    <!-- 主要容器 -->
+    <div class="container">
+        <!-- 標題區 -->
+        <header class="header">
+            <div class="header__content">
+                <h1><i class="fas fa-calendar-alt"></i> 班表管理工具</h1>
+                <div class="header__actions">
+                    <button class="btn btn--outline btn--sm" id="helpBtn">
+                        <i class="fas fa-question-circle"></i> 說明
+                    </button>
+                    <button class="btn btn--primary btn--sm" id="printBtn">
+                        <i class="fas fa-print"></i> 列印
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 工具列 -->
+        <div class="toolbar card">
+            <div class="toolbar__section">
+                <button class="btn btn--primary" id="manageStaffBtn">
+                    <i class="fas fa-users"></i> 管理人員
+                </button>
+                <button class="btn btn--secondary" id="autoScheduleBtn">
+                    <i class="fas fa-magic"></i> 自動排班
+                </button>
+                <button class="btn btn--outline" id="clearScheduleBtn">
+                    <i class="fas fa-eraser"></i> 清空班表
+                </button>
+            </div>
+            <div class="toolbar__section">
+                <div class="date-navigation">
+                    <button id="prevWeek" class="btn btn--sm btn--outline">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="currentWeekDisplay" class="current-week">2025年6月 第4週</span>
+                    <button id="nextWeek" class="btn btn--sm btn--outline">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="toolbar__section">
+                <button class="btn btn--outline btn--sm" id="importBtn">
+                    <i class="fas fa-upload"></i> 匯入
+                </button>
+                <button class="btn btn--outline btn--sm" id="exportBtn">
+                    <i class="fas fa-download"></i> 匯出
+                </button>
+                <button class="btn btn--outline btn--sm" id="backupBtn">
+                    <i class="fas fa-shield-alt"></i> 備份
+                </button>
+            </div>
+        </div>
+
+        <!-- 搜尋和篩選 -->
+        <div class="filters card">
+            <div class="filters__content">
+                <div class="form-group">
+                    <input type="text" id="searchStaff" class="form-control" placeholder="搜尋人員..." />
+                </div>
+                <div class="form-group">
+                    <select id="filterShift" class="form-control">
+                        <option value="">所有班次</option>
+                        <option value="早班">早班</option>
+                        <option value="中班">中班</option>
+                        <option value="晚班">晚班</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select id="filterDepartment" class="form-control">
+                        <option value="">所有部門</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 班表主要區域 -->
+        <div class="schedule-wrapper">
+            <div class="schedule-container card">
+                <div class="schedule-header">
+                    <div class="schedule-cell schedule-cell--corner">人員</div>
+                    <div class="schedule-cell schedule-cell--day">週一<br><span class="date-small">6/30</span></div>
+                    <div class="schedule-cell schedule-cell--day">週二<br><span class="date-small">7/1</span></div>
+                    <div class="schedule-cell schedule-cell--day">週三<br><span class="date-small">7/2</span></div>
+                    <div class="schedule-cell schedule-cell--day">週四<br><span class="date-small">7/3</span></div>
+                    <div class="schedule-cell schedule-cell--day">週五<br><span class="date-small">7/4</span></div>
+                    <div class="schedule-cell schedule-cell--day weekend">週六<br><span class="date-small">7/5</span></div>
+                    <div class="schedule-cell schedule-cell--day weekend">週日<br><span class="date-small">7/6</span></div>
+                </div>
+                <div id="scheduleBody" class="schedule-body">
+                    <!-- 動態生成的排班內容 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 統計資訊 -->
+        <div class="statistics card">
+            <h3><i class="fas fa-chart-bar"></i> 本週統計</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">總工作時數</span>
+                    <span class="stat-value" id="totalHours">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">已排班人員</span>
+                    <span class="stat-value" id="scheduledStaff">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">空缺班次</span>
+                    <span class="stat-value" id="vacantShifts">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">加班時數</span>
+                    <span class="stat-value" id="overtimeHours">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 人員管理對話框 -->
+    <div id="staffModal" class="modal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2><i class="fas fa-users"></i> 人員管理</h2>
+                <button class="modal__close" id="closeStaffModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal__body">
+                <div class="staff-management">
+                    <!-- 新增人員表單 -->
+                    <div class="add-staff-form">
+                        <h3>新增人員</h3>
+                        <form id="addStaffForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">姓名 <span class="required">*</span></label>
+                                    <input type="text" id="staffName" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部門</label>
+                                    <input type="text" id="staffDepartment" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">職位</label>
+                                    <input type="text" id="staffPosition" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">員工編號</label>
+                                    <input type="text" id="staffId" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">可工作班次</label>
+                                    <div class="checkbox-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" value="早班" class="shift-checkbox"> 早班 (08:00-16:00)
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" value="中班" class="shift-checkbox"> 中班 (16:00-24:00)
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" value="晚班" class="shift-checkbox"> 晚班 (00:00-08:00)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn--primary">
+                                <i class="fas fa-plus"></i> 新增人員
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 人員列表 -->
+                    <div class="staff-list">
+                        <h3>現有人員</h3>
+                        <div class="staff-list__header">
+                            <input type="text" id="staffSearchInput" class="form-control" placeholder="搜尋人員...">
+                        </div>
+                        <div id="staffListContainer" class="staff-list__content">
+                            <!-- 動態生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 班次選擇對話框 -->
+    <div id="shiftModal" class="modal">
+        <div class="modal__content modal__content--small">
+            <div class="modal__header">
+                <h3 id="shiftModalTitle">選擇班次</h3>
+                <button class="modal__close" id="closeShiftModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal__body">
+                <div class="shift-options">
+                    <button class="shift-option" data-shift="早班">
+                        <i class="fas fa-sun"></i>
+                        <span>早班</span>
+                        <small>08:00-16:00</small>
+                    </button>
+                    <button class="shift-option" data-shift="中班">
+                        <i class="fas fa-cloud-sun"></i>
+                        <span>中班</span>
+                        <small>16:00-24:00</small>
+                    </button>
+                    <button class="shift-option" data-shift="晚班">
+                        <i class="fas fa-moon"></i>
+                        <span>晚班</span>
+                        <small>00:00-08:00</small>
+                    </button>
+                    <button class="shift-option shift-option--remove" data-shift="">
+                        <i class="fas fa-times"></i>
+                        <span>移除班次</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 確認對話框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal__content modal__content--small">
+            <div class="modal__header">
+                <h3 id="confirmTitle">確認操作</h3>
+                <button class="modal__close" id="closeConfirmModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal__body">
+                <p id="confirmMessage"></p>
+                <div class="modal__actions">
+                    <button class="btn btn--outline" id="confirmCancel">取消</button>
+                    <button class="btn btn--primary" id="confirmOk">確認</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示訊息 -->
+    <div id="toast" class="toast">
+        <div class="toast__content">
+            <i class="toast__icon"></i>
+            <span class="toast__message"></span>
+        </div>
+    </div>
+
+    <!-- 說明對話框 -->
+    <div id="helpModal" class="modal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2><i class="fas fa-question-circle"></i> 使用說明</h2>
+                <button class="modal__close" id="closeHelpModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal__body">
+                <div class="help-content">
+                    <section>
+                        <h3>基本操作</h3>
+                        <ul>
+                            <li>點擊「管理人員」新增或編輯員工資料</li>
+                            <li>點擊班表格子選擇班次</li>
+                            <li>使用「自動排班」快速生成班表</li>
+                            <li>使用搜尋功能快速找到特定人員</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>快捷鍵</h3>
+                        <ul>
+                            <li><kbd>Ctrl + M</kbd> - 管理人員</li>
+                            <li><kbd>Ctrl + A</kbd> - 自動排班</li>
+                            <li><kbd>Ctrl + P</kbd> - 列印班表</li>
+                            <li><kbd>Ctrl + E</kbd> - 匯出資料</li>
+                            <li><kbd>Esc</kbd> - 關閉對話框</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>班次說明</h3>
+                        <ul>
+                            <li><strong>早班：</strong>08:00-16:00 (8小時)</li>
+                            <li><strong>中班：</strong>16:00-24:00 (8小時)</li>
+                            <li><strong>晚班：</strong>00:00-08:00 (8小時)</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隱藏的檔案輸入 -->
+    <input type="file" id="importFile" accept=".json" style="display: none;">
+
+    <script src="app.js"></script>
+</body>
+</html>

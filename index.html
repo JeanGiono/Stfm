@@ -63,11 +63,20 @@
       const [loanTerm, setLoanTerm] = useState(30);
       const [gracePeriod, setGracePeriod] = useState(0);
       const [interestRate, setInterestRate] = useState(2.06);
+      
+      // 新增：攤還方式 ('equal-pi' 本息平均, 'equal-principal' 本金平均)
+      const [repaymentMethod, setRepaymentMethod] = useState('equal-pi');
 
       // --- 計算結果狀態 ---
       const [results, setResults] = useState({
-        unitPrice: 0, loanAmount: 0, monthlyPaymentGrace: 0,
-        monthlyPaymentAmortization: 0, totalInterest: 0, totalPayment: 0
+        unitPrice: 0, 
+        loanAmount: 0, 
+        monthlyPaymentGrace: 0,
+        monthlyPaymentAmortization: 0, 
+        firstMonthAmortization: 0, // 用於本金攤還
+        monthlyDecrease: 0,        // 用於本金攤還
+        totalInterest: 0, 
+        totalPayment: 0
       });
 
       // --- 格式化工具 ---
@@ -83,9 +92,18 @@
 
       // --- 分享至 LINE ---
       const handleShareToLine = () => {
-        const shareText = `🏠 購屋財務試算結果\n------------------\n💰 房屋總價：${totalPrice} 萬元\n📐 建坪大小：${sizePing} 坪\n💎 坪數單價：${results.unitPrice} 萬/坪\n🏦 貸款總額：${formatCurrency(results.loanAmount)}\n📊 貸款條件：利率 ${interestRate}% / ${loanTerm}年 / 寬限期 ${gracePeriod}年\n------------------\n${gracePeriod > 0 
-          ? `🗓️ 前 ${gracePeriod} 年每月還款：${formatCurrency(results.monthlyPaymentGrace)} (僅繳利息)\n🗓️ 第 ${gracePeriod + 1} 年起每月還款：${formatCurrency(results.monthlyPaymentAmortization)} (本息攤還)` 
-          : `🗓️ 每月還款金額：${formatCurrency(results.monthlyPaymentAmortization)} (本息攤還)`}\n------------------\n💡 本試算僅供參考，實際核貸結果依銀行為準。`;
+        const methodText = repaymentMethod === 'equal-pi' ? '本息平均攤還' : '本金平均攤還';
+        
+        let amortizationText = '';
+        if (repaymentMethod === 'equal-pi') {
+          amortizationText = `${formatCurrency(results.monthlyPaymentAmortization)} (固定)`;
+        } else {
+          amortizationText = `首月 ${formatCurrency(results.firstMonthAmortization)} (之後每月遞減 ${formatCurrency(results.monthlyDecrease)})`;
+        }
+
+        const shareText = `🏠 購屋財務試算結果\n------------------\n💰 房屋總價：${totalPrice} 萬元\n📐 建坪大小：${sizePing} 坪\n💎 坪數單價：${results.unitPrice} 萬/坪\n🏦 貸款總額：${formatCurrency(results.loanAmount)}\n📊 貸款條件：利率 ${interestRate}% / ${loanTerm}年 / 寬限期 ${gracePeriod}年\n🔄 攤還方式：${methodText}\n------------------\n${gracePeriod > 0 
+          ? `🗓️ 前 ${gracePeriod} 年每月還款：${formatCurrency(results.monthlyPaymentGrace)} (僅繳利息)\n🗓️ 第 ${gracePeriod + 1} 年起還款：${amortizationText}` 
+          : `🗓️ 每月還款金額：${amortizationText}`}\n------------------\n💡 本試算僅供參考，實際核貸結果依銀行為準。`;
 
         const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
         window.open(lineUrl, '_blank');
@@ -101,27 +119,54 @@
         const graceMonths = gracePeriod * 12;
         const amortizationMonths = totalMonths - graceMonths;
 
-        let monthlyGrace = 0; let monthlyAmortization = 0; let totalInterestPaid = 0;
+        let monthlyGrace = 0; 
+        let monthlyAmortization = 0; 
+        let firstMonthAmortization = 0;
+        let monthlyDecrease = 0;
+        let totalInterestPaid = 0;
 
         if (loanAmountTWD > 0 && interestRate > 0) {
           monthlyGrace = loanAmountTWD * monthlyRate;
+          
           if (amortizationMonths > 0) {
-            const temp = Math.pow(1 + monthlyRate, amortizationMonths);
-            const amortizationRate = (temp * monthlyRate) / (temp - 1);
-            monthlyAmortization = loanAmountTWD * amortizationRate;
+            if (repaymentMethod === 'equal-pi') {
+              // 【本息平均攤還】
+              const temp = Math.pow(1 + monthlyRate, amortizationMonths);
+              const amortizationRate = (temp * monthlyRate) / (temp - 1);
+              monthlyAmortization = loanAmountTWD * amortizationRate;
+              
+              const totalPaid = (monthlyGrace * graceMonths) + (monthlyAmortization * amortizationMonths);
+              totalInterestPaid = totalPaid - loanAmountTWD;
+            } else {
+              // 【本金平均攤還】
+              const monthlyPrincipal = loanAmountTWD / amortizationMonths;
+              firstMonthAmortization = monthlyPrincipal + (loanAmountTWD * monthlyRate);
+              monthlyDecrease = monthlyPrincipal * monthlyRate; // 每月減少的利息
+              
+              // 總利息 = 寬限期利息 + 攤還期利息(等差數列和公式)
+              const amortizationInterest = ((amortizationMonths + 1) * loanAmountTWD * monthlyRate) / 2;
+              totalInterestPaid = (monthlyGrace * graceMonths) + amortizationInterest;
+            }
+          } else {
+             totalInterestPaid = monthlyGrace * graceMonths;
           }
-          const totalPaid = (monthlyGrace * graceMonths) + (monthlyAmortization * amortizationMonths);
-          totalInterestPaid = totalPaid - loanAmountTWD;
         } else if (interestRate === 0 && amortizationMonths > 0) {
+          // 零利率的極端狀況
           monthlyAmortization = loanAmountTWD / amortizationMonths;
+          firstMonthAmortization = monthlyAmortization;
         }
 
         setResults({
-          unitPrice: parseFloat(unitPrice), loanAmount: loanAmountTWD,
-          monthlyPaymentGrace: monthlyGrace, monthlyPaymentAmortization: monthlyAmortization,
-          totalInterest: totalInterestPaid, totalPayment: loanAmountTWD + totalInterestPaid
+          unitPrice: parseFloat(unitPrice), 
+          loanAmount: loanAmountTWD,
+          monthlyPaymentGrace: monthlyGrace, 
+          monthlyPaymentAmortization: monthlyAmortization,
+          firstMonthAmortization: firstMonthAmortization,
+          monthlyDecrease: monthlyDecrease,
+          totalInterest: totalInterestPaid, 
+          totalPayment: loanAmountTWD + totalInterestPaid
         });
-      }, [totalPrice, sizePing, downPayment, loanTerm, gracePeriod, interestRate]);
+      }, [totalPrice, sizePing, downPayment, loanTerm, gracePeriod, interestRate, repaymentMethod]);
 
       return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8 text-gray-800">
@@ -170,7 +215,6 @@
                     </div>
                   </div>
 
-                  {/* 單價分析提示 */}
                   <div className="mt-5 bg-blue-50/70 p-4 rounded-xl border border-blue-100/50 flex items-center justify-between">
                     <span className="text-gray-700 font-medium">換算坪數單價</span>
                     <span className="text-xl font-bold text-blue-700">
@@ -179,7 +223,7 @@
                   </div>
                 </div>
 
-                {/* --- 新增：市場行情查詢卡片 --- */}
+                {/* 市場行情查詢卡片 */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <div className="flex items-center space-x-2 mb-4 text-purple-800 border-b border-gray-50 pb-3">
                     <IconSearch size={22} className="text-purple-600"/>
@@ -218,6 +262,22 @@
                         🚀 新青安 (1.775%)
                       </button>
                     </div>
+                  </div>
+
+                  {/* 攤還方式切換器 (Segmented Control) */}
+                  <div className="mb-6 bg-gray-100 p-1.5 rounded-xl flex">
+                    <button 
+                      onClick={() => setRepaymentMethod('equal-pi')}
+                      className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${repaymentMethod === 'equal-pi' ? 'bg-white shadow-sm text-green-700' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      本息平均攤還 (每月固定)
+                    </button>
+                    <button 
+                      onClick={() => setRepaymentMethod('equal-principal')}
+                      className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${repaymentMethod === 'equal-principal' ? 'bg-white shadow-sm text-green-700' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      本金平均攤還 (先高後低)
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -285,15 +345,31 @@
                           <div className="bg-gray-800/60 p-4 rounded-2xl border border-gray-700/50">
                             <div className="flex justify-between items-center mb-1.5">
                               <span className="text-sm font-medium text-white">第 {gracePeriod + 1} 年起</span>
-                              <span className="text-xs text-gray-400 bg-gray-900 px-2 py-0.5 rounded-full">本息攤還</span>
+                              <span className="text-xs text-gray-400 bg-gray-900 px-2 py-0.5 rounded-full">{repaymentMethod === 'equal-pi' ? '固定本息' : '首月本息'}</span>
                             </div>
-                            <p className="text-2xl font-bold text-white">{formatCurrency(results.monthlyPaymentAmortization)} <span className="text-sm font-normal text-gray-500">/月</span></p>
+                            {repaymentMethod === 'equal-pi' ? (
+                                <p className="text-2xl font-bold text-white">{formatCurrency(results.monthlyPaymentAmortization)} <span className="text-sm font-normal text-gray-500">/月</span></p>
+                            ) : (
+                                <div>
+                                    <p className="text-2xl font-bold text-white">{formatCurrency(results.firstMonthAmortization)} <span className="text-sm font-normal text-gray-500">/月</span></p>
+                                    <p className="text-sm text-gray-400 mt-1">之後每月約遞減 <span className="text-gray-300">{formatCurrency(results.monthlyDecrease)}</span></p>
+                                </div>
+                            )}
                           </div>
                         </div>
                       ) : (
                         <div className="bg-gray-800 p-5 rounded-2xl border border-gray-700">
-                          <p className="text-3xl font-bold text-blue-400">{formatCurrency(results.monthlyPaymentAmortization)} <span className="text-lg font-normal text-gray-500">/月</span></p>
-                          <p className="text-gray-400 text-sm mt-2">無寬限期，採本息平均攤還</p>
+                          {repaymentMethod === 'equal-pi' ? (
+                              <div>
+                                <p className="text-3xl font-bold text-blue-400">{formatCurrency(results.monthlyPaymentAmortization)} <span className="text-lg font-normal text-gray-500">/月</span></p>
+                                <p className="text-gray-400 text-sm mt-2">採本息平均攤還，每月金額固定</p>
+                              </div>
+                          ) : (
+                              <div>
+                                <p className="text-3xl font-bold text-blue-400">{formatCurrency(results.firstMonthAmortization)} <span className="text-lg font-normal text-gray-500">/首月</span></p>
+                                <p className="text-gray-400 text-sm mt-2">採本金平均攤還，之後每月約遞減 <span className="text-blue-300 font-medium">{formatCurrency(results.monthlyDecrease)}</span></p>
+                              </div>
+                          )}
                         </div>
                       )}
                     </div>

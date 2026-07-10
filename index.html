@@ -1,587 +1,1281 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>專業版購屋財務與貸款分析器</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
-    /* 隱藏捲軸但保留捲動功能 (針對彈出視窗) */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>門窗工程報價與合約書 PDF 轉換工具</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS (XLSX & CSV Parser) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2pdf.js for direct PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', "Microsoft JhengHei", sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        /* A4 aspect ratio preview in screen mode */
+        .preview-page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm 15mm;
+            margin: 0 auto;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        /* Signature Canvas Style */
+        #sig-canvas {
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        /* Hide elements on system printing */
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .preview-page {
+                width: 100% !important;
+                min-height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                box-sizing: border-box;
+            }
+            /* Precision print optimization */
+            tr {
+                page-break-inside: avoid !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-  <div id="root"></div>
+<body class="min-h-screen text-slate-800 flex flex-col">
 
-  <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
-
-    // --- 圖示元件庫 ---
-    const IconCalculator = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16.01" y1="10" y2="10"/><line x1="16" x2="16.01" y1="14" y2="14"/><line x1="16" x2="16.01" y1="18" y2="18"/><line x1="8" x2="8.01" y1="10" y2="10"/><line x1="8" x2="8.01" y1="14" y2="14"/><line x1="8" x2="8.01" y1="18" y2="18"/><line x1="12" x2="12.01" y1="10" y2="10"/><line x1="12" x2="12.01" y1="14" y2="14"/><line x1="12" x2="12.01" y1="18" y2="18"/></svg>;
-    const IconHome = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
-    const IconDollar = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
-    const IconWallet = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a8 8 0 0 1-5 7.59C14.1 21.29 13 22 12 22a8 8 0 0 1-8-8V7h15Z"/><path d="M19 15v-4"/></svg>;
-    const IconShield = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.82 0 4.96.94 7 2a1 1 0 0 1 1 1v7z"/></svg>;
-    const IconCar = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H8.3a2 2 0 0 0-1.6.8L4 11l-5.16.86a1 1 0 0 0-.84.99V16h3m14 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 16a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/></svg>;
-    const IconTable = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="3" x2="21" y1="15" y2="15"/><line x1="9" x2="9" y1="9" y2="21"/><line x1="15" x2="15" y1="9" y2="21"/></svg>;
-    const IconMessage = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>;
-    const IconX = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>;
-    const IconAlert = ({ size = 24, className = "" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>;
-
-    // --- 輔助函式：產生單一貸款的月還款陣列 ---
-    const generateLoanSchedule = (amount, annualRatePct, years, graceYears, method) => {
-      if (amount <= 0) return [];
-      const monthlyRate = (annualRatePct / 100) / 12;
-      const totalMonths = years * 12;
-      const graceMonths = graceYears * 12;
-      const amortMonths = totalMonths - graceMonths;
-      
-      const schedule = [];
-      let balance = amount;
-      
-      let equalPiPayment = 0;
-      if (method === 'equal-pi' && amortMonths > 0 && monthlyRate > 0) {
-        const temp = Math.pow(1 + monthlyRate, amortMonths);
-        equalPiPayment = amount * ((temp * monthlyRate) / (temp - 1));
-      }
-
-      const equalPrincipalMonthly = amortMonths > 0 ? amount / amortMonths : 0;
-
-      for (let m = 1; m <= totalMonths; m++) {
-        let interest = balance * monthlyRate;
-        let principal = 0;
-
-        if (m > graceMonths) {
-          if (method === 'equal-pi') {
-            principal = monthlyRate > 0 ? equalPiPayment - interest : amount / amortMonths;
-          } else { // equal-principal
-            principal = equalPrincipalMonthly;
-          }
-        }
-        
-        if (m === totalMonths) principal = balance; // 尾數修正
-        balance -= principal;
-        if (balance < 0) balance = 0;
-        
-        schedule.push({ month: m, interest, principal, payment: interest + principal, balance });
-      }
-      return schedule;
-    };
-
-    const MortgageCalculator = () => {
-      // 1. 房屋與車位資訊
-      const [totalPrice, setTotalPrice] = useState(1500);
-      const [sizePing, setSizePing] = useState(35);
-      const [hasCarPark, setHasCarPark] = useState(true);
-      const [carParkPrice, setCarParkPrice] = useState(200);
-      const [carParkSize, setCarParkSize] = useState(10);
-      
-      const [ltv, setLtv] = useState(80);
-      const [downPayment, setDownPayment] = useState(300);
-
-      // 2. 隱藏成本
-      const [agentFeeRate, setAgentFeeRate] = useState(2);
-      const [taxFee, setTaxFee] = useState(15);
-      const [decorationFee, setDecorationFee] = useState(80);
-
-      // 3. 財務健康度 (收支比)
-      const [monthlyIncome, setMonthlyIncome] = useState(12);
-
-      // 4. 貸款條件
-      const [loanScheme, setLoanScheme] = useState('youth');
-      const [repaymentMethod, setRepaymentMethod] = useState('equal-pi');
-      
-      // 主貸款條件 (新青安預設)
-      const [interestRate, setInterestRate] = useState(1.775);
-      const [loanTerm, setLoanTerm] = useState(40);
-      const [gracePeriod, setGracePeriod] = useState(5);
-
-      // 組合貸款之「超過額度」條件 (一般首購預設)
-      const [excessRate, setExcessRate] = useState(2.06);
-      const [excessTerm, setExcessTerm] = useState(30);
-      const [excessGrace, setExcessGrace] = useState(0);
-
-      // UI 狀態
-      const [showModal, setShowModal] = useState(false);
-
-      const formatCurrency = (val) => new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(Math.round(val || 0));
-
-      // --- 連動邏輯 ---
-      const handleTotalPriceChange = (e) => {
-        const newPrice = Number(e.target.value);
-        setTotalPrice(newPrice);
-        setDownPayment(Math.round(newPrice * (1 - ltv / 100) * 100) / 100);
-      };
-      const handleLtvChange = (e) => {
-        const newLtv = Number(e.target.value);
-        setLtv(newLtv);
-        setDownPayment(Math.round(totalPrice * (1 - newLtv / 100) * 100) / 100);
-      };
-      const handleDpChange = (e) => {
-        const newDp = Number(e.target.value);
-        setDownPayment(newDp);
-        if (totalPrice > 0) setLtv(Math.round(((totalPrice - newDp) / totalPrice) * 1000) / 10);
-      };
-
-      const applyScheme = (scheme) => {
-        setLoanScheme(scheme);
-        if (scheme === 'standard') {
-          setInterestRate(2.06); setLoanTerm(30); setGracePeriod(0);
-        } else if (scheme === 'youth') {
-          setInterestRate(1.775); setLoanTerm(40); setGracePeriod(5);
-        }
-      };
-
-      // --- 核心計算 (使用 useMemo 避免無謂重算) ---
-      const calculation = useMemo(() => {
-        // 1. 車位拆算單價
-        let effectivePrice = totalPrice;
-        let effectiveSize = sizePing;
-        if (hasCarPark) {
-          effectivePrice = Math.max(0, totalPrice - carParkPrice);
-          effectiveSize = Math.max(0.1, sizePing - carParkSize);
-        }
-        const unitPrice = (effectivePrice / effectiveSize).toFixed(2);
-
-        // 2. 購屋應備總現金
-        const agentFeeTWD = (totalPrice * 10000) * (agentFeeRate / 100);
-        const taxFeeTWD = taxFee * 10000;
-        const decoFeeTWD = decorationFee * 10000;
-        const dpTWD = downPayment * 10000;
-        const totalCashNeeded = dpTWD + agentFeeTWD + taxFeeTWD + decoFeeTWD;
-
-        // 3. 貸款總額與雙方案拆算
-        const loanAmountTWD = Math.max(0, (totalPrice - downPayment) * 10000);
-        let schedule1 = [];
-        let schedule2 = [];
-        let isDualLoan = false;
-
-        if (loanScheme === 'youth' && loanAmountTWD > 10000000) {
-          // 啟動雙貸款
-          isDualLoan = true;
-          schedule1 = generateLoanSchedule(10000000, interestRate, loanTerm, gracePeriod, repaymentMethod);
-          schedule2 = generateLoanSchedule(loanAmountTWD - 10000000, excessRate, excessTerm, excessGrace, repaymentMethod);
-        } else {
-          // 單一貸款
-          schedule1 = generateLoanSchedule(loanAmountTWD, interestRate, loanTerm, gracePeriod, repaymentMethod);
-        }
-
-        // 4. 合併月還款陣列
-        const maxMonths = Math.max(schedule1.length, schedule2.length);
-        const combinedMonthly = [];
-        let totalInterest = 0;
-        let maxMonthlyPayment = 0;
-
-        for (let m = 0; m < maxMonths; m++) {
-          const s1 = schedule1[m] || { interest: 0, principal: 0, payment: 0, balance: 0 };
-          const s2 = schedule2[m] || { interest: 0, principal: 0, payment: 0, balance: 0 };
-          
-          const curPayment = s1.payment + s2.payment;
-          if (curPayment > maxMonthlyPayment) maxMonthlyPayment = curPayment;
-          totalInterest += (s1.interest + s2.interest);
-
-          combinedMonthly.push({
-            month: m + 1,
-            interest: s1.interest + s2.interest,
-            principal: s1.principal + s2.principal,
-            payment: curPayment,
-            balance: s1.balance + s2.balance
-          });
-        }
-
-        // 5. 收支比 (以最高月繳款計算)
-        const incomeTWD = monthlyIncome * 10000;
-        const dti = incomeTWD > 0 ? (maxMonthlyPayment / incomeTWD) * 100 : 0;
-        let dtiStatus = { color: 'bg-green-100 text-green-800 border-green-200', text: '安全 (餘裕充足)' };
-        if (dti > 60) dtiStatus = { color: 'bg-red-100 text-red-800 border-red-200', text: '危險 (銀行恐拒貸)' };
-        else if (dti > 35) dtiStatus = { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', text: '警戒 (生活品質受限)' };
-
-        // 6. 提煉 UI 顯示用的階段摘要 (Phase Summary)
-        const displayPhases = [];
-        if (combinedMonthly.length > 0) {
-          if (repaymentMethod === 'equal-pi') {
-            // 本息攤還：找出金額變化的轉折點 (四捨五入後差異大於10元視為不同階段)
-            let currentPhase = { start: 1, end: 1, payment: combinedMonthly[0].payment };
-            for (let i = 1; i < combinedMonthly.length; i++) {
-              if (Math.abs(combinedMonthly[i].payment - currentPhase.payment) > 10) {
-                currentPhase.end = i;
-                displayPhases.push(currentPhase);
-                currentPhase = { start: i + 1, end: i + 1, payment: combinedMonthly[i].payment };
-              } else {
-                currentPhase.end = i + 1;
-              }
-            }
-            displayPhases.push(currentPhase); // push last phase
-          } else {
-            // 本金攤還：只顯示首期最高，以及找出第一個月的總金額
-            displayPhases.push({ start: 1, end: maxMonths, payment: combinedMonthly[0].payment, type: 'principal' });
-          }
-        }
-
-        // 7. 年度報表聚合 (Yearly aggregation)
-        const yearlySchedule = [];
-        for (let y = 0; y < Math.ceil(maxMonths / 12); y++) {
-          let yInt = 0, yPrin = 0, yPay = 0, endBal = 0;
-          for (let m = 0; m < 12; m++) {
-            const idx = y * 12 + m;
-            if (idx < combinedMonthly.length) {
-              yInt += combinedMonthly[idx].interest;
-              yPrin += combinedMonthly[idx].principal;
-              yPay += combinedMonthly[idx].payment;
-              endBal = combinedMonthly[idx].balance; // 取該年最後一個月的餘額
-            }
-          }
-          yearlySchedule.push({ year: y + 1, payment: yPay, principal: yPrin, interest: yInt, balance: endBal });
-        }
-
-        return {
-          unitPrice, totalCashNeeded, loanAmountTWD, agentFeeTWD, taxFeeTWD, decoFeeTWD, dpTWD,
-          isDualLoan, maxMonthlyPayment, totalInterest, dti, dtiStatus, displayPhases, yearlySchedule,
-          combinedMonthly
-        };
-      }, [totalPrice, sizePing, hasCarPark, carParkPrice, carParkSize, ltv, downPayment, 
-          agentFeeRate, taxFee, decorationFee, monthlyIncome, loanScheme, repaymentMethod, 
-          interestRate, loanTerm, gracePeriod, excessRate, excessTerm, excessGrace]);
-
-      // --- 分享至 LINE ---
-      const handleShareToLine = () => {
-        const shareText = `🏠 購屋財務健檢報告\n------------------\n` +
-          `💰 總價：${totalPrice}萬 ${hasCarPark ? `(含車位${carParkPrice}萬)` : ''}\n` +
-          `💎 實際單價：${calculation.unitPrice} 萬/坪\n` +
-          `🏦 貸款成數：${ltv}%\n` +
-          `💸 應備總現金：${formatCurrency(calculation.totalCashNeeded)} (含頭款、仲介、稅費與裝潢)\n` +
-          `📊 收支比(DTI)：${calculation.dti.toFixed(1)}% [${calculation.dtiStatus.text}]\n` +
-          `------------------\n` +
-          `🏦 貸款總額：${formatCurrency(calculation.loanAmountTWD)}\n` +
-          `${calculation.isDualLoan ? `⚠️ 採新青安+一般貸款組合計算\n` : ''}` +
-          `🔄 攤還方式：${repaymentMethod === 'equal-pi' ? '本息平均' : '本金平均'}\n` +
-          `📈 最高月繳：${formatCurrency(calculation.maxMonthlyPayment)}\n` +
-          `------------------\n💡 試算結果僅供參考。`;
-
-        const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
-        window.open(lineUrl, '_blank');
-      };
-
-      return (
-        <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            
-            {/* Header */}
-            <div className="flex items-center space-x-4 mb-8">
-              <div className="bg-blue-600 p-3.5 rounded-2xl text-white shadow-lg shadow-blue-200">
-                <IconCalculator size={32} />
-              </div>
-              <div>
-                <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">購屋財務與貸款分析器</h1>
-                <p className="text-gray-500 mt-1">整合車位拆算、新青安組合貸款、現金流評估的專業版工具</p>
-              </div>
+    <!-- Header Control Bar -->
+    <header class="no-print bg-slate-900 text-white shadow-md sticky top-0 z-30 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
-              {/* === 左側：輸入區 === */}
-              <div className="lg:col-span-7 space-y-6">
-                
-                {/* 1. 房屋與車位資訊 */}
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-                  <div className="flex items-center space-x-2 mb-6 text-blue-800 border-b border-gray-100 pb-3">
-                    <IconHome size={22} className="text-blue-600"/>
-                    <h2 className="text-xl font-bold">房屋與車位資訊</h2>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-5 mb-5">
-                    <div className="col-span-2 sm:col-span-1">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">房屋總價 (萬元)</label>
-                      <input type="number" value={totalPrice} onChange={handleTotalPriceChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" />
-                    </div>
-                    <div className="col-span-2 sm:col-span-1">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">總建坪 (坪)</label>
-                      <input type="number" value={sizePing} onChange={(e) => setSizePing(Number(e.target.value))} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" />
-                    </div>
-                  </div>
-
-                  {/* 車位開關與輸入 */}
-                  <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 mb-5">
-                    <label className="flex items-center cursor-pointer mb-3">
-                      <input type="checkbox" checked={hasCarPark} onChange={() => setHasCarPark(!hasCarPark)} className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300" />
-                      <span className="ml-2 font-semibold text-blue-900 flex items-center"><IconCar size={18} className="mr-1"/> 包含車位 (啟用車位單價拆算)</span>
-                    </label>
-                    {hasCarPark && (
-                      <div className="grid grid-cols-2 gap-4 mt-3">
-                        <div>
-                          <label className="block text-xs font-medium text-blue-800 mb-1">車位總價 (萬元)</label>
-                          <input type="number" value={carParkPrice} onChange={(e) => setCarParkPrice(Number(e.target.value))} className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-blue-800 mb-1">車位坪數 (坪)</label>
-                          <input type="number" value={carParkSize} onChange={(e) => setCarParkSize(Number(e.target.value))} className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-5">
-                    <div className="col-span-2 sm:col-span-1">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">貸款成數 (%)</label>
-                      <input type="number" value={ltv} onChange={handleLtvChange} max="100" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" />
-                    </div>
-                    <div className="col-span-2 sm:col-span-1">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">自備頭期款 (萬元)</label>
-                      <input type="number" value={downPayment} onChange={handleDpChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" />
-                    </div>
-                  </div>
-
-                  {/* 顯示真實單價 */}
-                  <div className="mt-6 flex justify-between items-end border-t border-gray-100 pt-5">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">扣除車位後</p>
-                      <p className="text-gray-800 font-bold">真實房屋單價</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-3xl font-extrabold text-blue-600">{calculation.unitPrice}</span>
-                      <span className="text-gray-500 ml-1 font-medium">萬/坪</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. 隱藏成本與準備金 */}
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-                  <div className="flex items-center space-x-2 mb-6 text-orange-800 border-b border-gray-100 pb-3">
-                    <IconWallet size={22} className="text-orange-600"/>
-                    <h2 className="text-xl font-bold">購屋隱藏成本估算</h2>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">買方仲介費 (%)</label>
-                      <input type="number" step="0.1" value={agentFeeRate} onChange={(e) => setAgentFeeRate(Number(e.target.value))} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" />
-                      <p className="text-xs text-gray-400 mt-1">約 {Math.round(totalPrice * agentFeeRate / 100)} 萬</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">代書與稅費 (萬元)</label>
-                      <input type="number" value={taxFee} onChange={(e) => setTaxFee(Number(e.target.value))} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" />
-                      <p className="text-xs text-gray-400 mt-1">契稅、印花、規費</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">裝潢家電預算 (萬元)</label>
-                      <input type="number" value={decorationFee} onChange={(e) => setDecorationFee(Number(e.target.value))} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" />
-                      <p className="text-xs text-gray-400 mt-1">入住前必要花費</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. 貸款條件與雙組合設定 */}
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-                  <div className="flex items-center space-x-2 text-green-700 mb-6 border-b border-gray-100 pb-3">
-                    <IconDollar size={22} className="text-green-600"/>
-                    <h2 className="text-xl font-bold text-gray-800">貸款條件設定</h2>
-                  </div>
-
-                  <div className="mb-6 bg-gray-100 p-1.5 rounded-xl flex space-x-1">
-                    <button onClick={() => applyScheme('standard')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${loanScheme === 'standard' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}>一般首購</button>
-                    <button onClick={() => applyScheme('youth')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${loanScheme === 'youth' ? 'bg-white shadow-sm text-green-700 border border-green-100' : 'text-gray-500 hover:text-gray-700'}`}>🚀 新青安專案</button>
-                    <button onClick={() => setLoanScheme('custom')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${loanScheme === 'custom' ? 'bg-white shadow-sm text-purple-700' : 'text-gray-500 hover:text-gray-700'}`}>自訂條件</button>
-                  </div>
-
-                  {calculation.isDualLoan && (
-                    <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl">
-                      <p className="text-sm font-bold text-green-800 mb-1 flex items-center"><IconAlert size={16} className="mr-1"/> 啟動新青安雙貸款組合拆算</p>
-                      <p className="text-xs text-green-700 mb-3">您的貸款總額為 {calculation.loanAmountTWD / 10000} 萬，超過新青安 1,000 萬上限。系統將自動拆分計算：</p>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="bg-white p-3 rounded-xl shadow-sm border border-green-100">
-                          <span className="block text-green-600 font-bold mb-1">額度內 (1,000萬)</span>
-                          使用下方設定之新青安利率與條件。
-                        </div>
-                        <div className="bg-white p-3 rounded-xl shadow-sm border border-blue-100">
-                          <span className="block text-blue-600 font-bold mb-1">超過部分 ({(calculation.loanAmountTWD/10000 - 1000).toFixed(1)}萬)</span>
-                          <div className="space-y-2 mt-2">
-                            <div className="flex items-center justify-between"><span className="text-gray-500 text-xs">利率%</span><input type="number" step="0.01" value={excessRate} onChange={e=>setExcessRate(Number(e.target.value))} className="w-16 border rounded px-1 text-right text-xs py-0.5" /></div>
-                            <div className="flex items-center justify-between"><span className="text-gray-500 text-xs">年限</span><input type="number" value={excessTerm} onChange={e=>setExcessTerm(Number(e.target.value))} className="w-16 border rounded px-1 text-right text-xs py-0.5" /></div>
-                            <div className="flex items-center justify-between"><span className="text-gray-500 text-xs">寬限期</span><input type="number" value={excessGrace} onChange={e=>setExcessGrace(Number(e.target.value))} className="w-16 border rounded px-1 text-right text-xs py-0.5" /></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">主方案年利率 (%)</label>
-                      <input type="number" step="0.001" value={interestRate} onChange={(e)=>{setInterestRate(Number(e.target.value)); setLoanScheme('custom');}} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-medium" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">貸款年限 (年)</label>
-                      <select value={loanTerm} onChange={(e)=>{setLoanTerm(Number(e.target.value)); setLoanScheme('custom');}} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-medium">
-                        <option value={20}>20 年</option><option value={30}>30 年</option><option value={40}>40 年</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">寬限期 (年)</label>
-                      <select value={gracePeriod} onChange={(e)=>{setGracePeriod(Number(e.target.value)); setLoanScheme('custom');}} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-medium">
-                        <option value={0}>無寬限期</option><option value={1}>1 年</option><option value={2}>2 年</option>
-                        <option value={3}>3 年</option><option value={4}>4 年</option><option value={5}>5 年</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <label className="block text-sm font-bold text-gray-700 mb-2">攤還方式</label>
-                  <div className="bg-gray-100 p-1.5 rounded-xl flex space-x-1">
-                    <button onClick={() => setRepaymentMethod('equal-pi')} className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${repaymentMethod === 'equal-pi' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>本息平均攤還</button>
-                    <button onClick={() => setRepaymentMethod('equal-principal')} className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${repaymentMethod === 'equal-principal' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>本金平均攤還</button>
-                  </div>
-                </div>
-              </div>
-
-              {/* === 右側：浮動結果區 === */}
-              <div className="lg:col-span-5 flex flex-col space-y-6">
-                
-                {/* 財務健康度 (DTI) 卡片 */}
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-                  <div className="flex items-center space-x-2 text-purple-800 mb-5 border-b border-gray-100 pb-3">
-                    <IconShield size={22} className="text-purple-600"/>
-                    <h2 className="text-xl font-bold">買房負擔能力 (收支比)</h2>
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">家庭每月總收入 (萬元)</label>
-                    <input type="number" value={monthlyIncome} onChange={(e) => setMonthlyIncome(Number(e.target.value))} placeholder="例如: 12" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-bold text-lg text-purple-900" />
-                  </div>
-                  <div className={`mt-4 p-4 rounded-2xl border flex items-center justify-between transition-colors ${calculation.dtiStatus.color}`}>
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wider opacity-75">房貸佔收入比</p>
-                      <p className="text-lg font-extrabold">{calculation.dti.toFixed(1)} %</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold">{calculation.dtiStatus.text}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 核心試算結果黑卡 */}
-                <div className="bg-gray-900 rounded-3xl shadow-xl p-6 md:p-8 text-white flex-grow flex flex-col relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -mr-10 -mt-10"></div>
-                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -ml-10 -mb-10"></div>
-                  
-                  <h2 className="text-2xl font-bold mb-6 border-b border-gray-800 pb-4 relative z-10">總結算報告</h2>
-                  
-                  <div className="space-y-6 flex-grow relative z-10">
-                    
-                    {/* 現金準備 */}
-                    <div className="bg-gray-800/50 p-5 rounded-2xl border border-gray-700/50">
-                      <p className="text-gray-400 text-sm font-medium mb-1">簽約至交屋 應備總現金</p>
-                      <p className="text-4xl font-extrabold text-white tracking-tight">{formatCurrency(calculation.totalCashNeeded)}</p>
-                      <p className="text-gray-400 text-xs mt-2 font-medium">包含頭款 {calculation.dpTWD/10000}萬 + 稅費裝潢等雜支 {(calculation.agentFeeTWD+calculation.taxFeeTWD+calculation.decoFeeTWD)/10000}萬</p>
-                    </div>
-
-                    <div className="h-px bg-gray-800 w-full"></div>
-
-                    {/* 月還款細節 */}
-                    <div>
-                      <p className="text-gray-400 text-sm font-medium mb-3 flex items-center justify-between">
-                        <span>每月房貸還款</span>
-                        {calculation.isDualLoan && <span className="bg-blue-900 text-blue-200 text-xs px-2 py-0.5 rounded-full">雙貸款組合</span>}
-                      </p>
-                      
-                      <div className="space-y-3">
-                        {calculation.displayPhases.map((phase, idx) => (
-                          <div key={idx} className={`p-4 rounded-2xl border ${idx === calculation.displayPhases.length - 1 && repaymentMethod === 'equal-pi' ? 'bg-blue-900/20 border-blue-500/30' : 'bg-gray-800/40 border-gray-700/50'}`}>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-sm font-medium text-gray-300">
-                                {repaymentMethod === 'equal-pi' 
-                                  ? `第 ${Math.ceil(phase.start/12)}~${Math.ceil(phase.end/12)} 年`
-                                  : '首月最高繳款'}
-                              </span>
-                              {phase.payment === calculation.maxMonthlyPayment && <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full border border-red-500/20">最高</span>}
-                            </div>
-                            <p className="text-2xl font-bold text-white">
-                              {formatCurrency(phase.payment)} <span className="text-sm font-normal text-gray-500">/月</span>
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="h-px bg-gray-800 w-full"></div>
-
-                    {/* 利息總額 */}
-                    <div className="flex justify-between items-center">
-                      <p className="text-gray-400 text-sm font-medium">貸款期間總利息</p>
-                      <p className="text-xl font-bold text-red-400">{formatCurrency(calculation.totalInterest)}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 space-y-3 relative z-10">
-                    <button onClick={() => setShowModal(true)} className="w-full bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center transition-all">
-                      <IconTable size={18} className="mr-2" />
-                      查看年度還款明細表
-                    </button>
-                    <button onClick={handleShareToLine} className="w-full bg-[#06C755] hover:bg-[#05b34c] text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center transition-all shadow-lg hover:shadow-xl">
-                      <IconMessage size={18} className="mr-2" />
-                      LINE 傳送健檢報告
-                    </button>
-                  </div>
-                </div>
-
-              </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">工程合約報價單 PDF 轉換器</h1>
+                <p class="text-xs text-slate-400">專為門窗、裝潢工程合約開發的智慧型解析工具</p>
             </div>
-          </div>
-
-          {/* === 年度還款明細 Modal === */}
-          {showModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
-              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-[fadeIn_0.2s_ease-out]">
-                
-                {/* Modal Header */}
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">年度還款明細表</h3>
-                    <p className="text-sm text-gray-500 mt-1">總貸款：{formatCurrency(calculation.loanAmountTWD)} | 總利息：{formatCurrency(calculation.totalInterest)}</p>
-                  </div>
-                  <button onClick={() => setShowModal(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
-                    <IconX size={24} />
-                  </button>
-                </div>
-
-                {/* Modal Table Body */}
-                <div className="flex-grow overflow-y-auto p-0 no-scrollbar relative">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 bg-white/95 backdrop-blur shadow-sm z-10">
-                      <tr>
-                        <th className="py-3 px-6 text-sm font-bold text-gray-700 border-b">年度</th>
-                        <th className="py-3 px-6 text-sm font-bold text-gray-700 border-b text-right">該年繳款總額</th>
-                        <th className="py-3 px-6 text-sm font-bold text-gray-700 border-b text-right">其中本金</th>
-                        <th className="py-3 px-6 text-sm font-bold text-gray-700 border-b text-right">其中利息</th>
-                        <th className="py-3 px-6 text-sm font-bold text-blue-700 border-b text-right bg-blue-50/30">年底剩餘房貸</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {calculation.yearlySchedule.map((row) => (
-                        <tr key={row.year} className="hover:bg-gray-50 transition-colors">
-                          <td className="py-3 px-6 text-sm font-medium text-gray-900">第 {row.year} 年</td>
-                          <td className="py-3 px-6 text-sm text-gray-600 text-right">{formatCurrency(row.payment)}</td>
-                          <td className="py-3 px-6 text-sm text-gray-600 text-right">{formatCurrency(row.principal)}</td>
-                          <td className="py-3 px-6 text-sm text-red-500 text-right">{formatCurrency(row.interest)}</td>
-                          <td className="py-3 px-6 text-sm font-bold text-blue-700 text-right bg-blue-50/10">{formatCurrency(row.balance)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
         </div>
-      );
-    };
+        <div class="flex flex-wrap items-center gap-3">
+            <button onclick="loadSampleData()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 transition-colors rounded text-xs font-semibold">
+                載入張先生範例資料
+            </button>
+            <button onclick="triggerBrowserPrint()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg shadow text-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                瀏覽器列印/存PDF
+            </button>
+            <button onclick="exportDirectPDF()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg shadow text-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                一鍵匯出 PDF 檔案
+            </button>
+        </div>
+    </header>
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<MortgageCalculator />);
-  </script>
+    <!-- Main Workspace -->
+    <main class="flex-1 flex flex-col lg:flex-row gap-6 p-4 md:p-6">
+        
+        <!-- Left Column: Importer & Form Editor (No Print) -->
+        <section class="no-print w-full lg:w-[45%] flex flex-col gap-6">
+            
+            <!-- File Drag and Drop Importer -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h2 class="text-md font-bold mb-3 text-slate-800 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-indigo-500 rounded-full"></span> 
+                    1. 匯入合約報價檔案 (.xlsx / .csv)
+                </h2>
+                <div id="drop-zone" class="border-2 border-dashed border-indigo-200 hover:border-indigo-500 bg-indigo-50/50 hover:bg-indigo-50 rounded-xl p-8 text-center transition-all cursor-pointer relative">
+                    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    <svg class="w-12 h-12 text-indigo-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <p class="text-sm font-semibold text-slate-700">拖曳 Excel 或 CSV 檔案至此處，或點此選擇檔案</p>
+                    <p class="text-xs text-slate-400 mt-1">系統將自動分析並帶入所有報價欄位與工程規格</p>
+                </div>
+                <div id="file-status" class="hidden mt-3 p-3 bg-emerald-50 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="file-status-text">已成功讀取檔案</span>
+                </div>
+            </div>
+
+            <!-- Form Live Editor Tabs -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col min-h-[500px]">
+                <!-- Tab Headers -->
+                <div class="flex border-b border-slate-200 bg-slate-50 rounded-t-xl">
+                    <button onclick="switchTab('basic')" id="tab-btn-basic" class="flex-1 py-3 px-4 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-600 transition-all">基本合約資料</button>
+                    <button onclick="switchTab('items')" id="tab-btn-items" class="flex-1 py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all">工程項目明細</button>
+                    <button onclick="switchTab('details')" id="tab-btn-details" class="flex-1 py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all">工程/尺寸備註</button>
+                    <button onclick="switchTab('style')" id="tab-btn-style" class="flex-1 py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all">排版設定</button>
+                </div>
+
+                <!-- Tab Content Box -->
+                <div class="p-6 flex-1 overflow-y-auto max-h-[600px]">
+                    
+                    <!-- TAB 1: Basic Info -->
+                    <div id="tab-content-basic" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">合約標題</label>
+                            <input type="text" id="edit-title" oninput="updateField('title', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">購買人 (客戶姓名)</label>
+                                <input type="text" id="edit-buyer" oninput="updateField('buyer', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">身分證字號</label>
+                                <input type="text" id="edit-buyerId" oninput="updateField('buyerId', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">聯絡電話</label>
+                                <input type="text" id="edit-buyerPhone" oninput="updateField('buyerPhone', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">報價日期</label>
+                                <input type="text" id="edit-date" oninput="updateField('date', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">工地地址</label>
+                            <input type="text" id="edit-siteAddress" oninput="updateField('siteAddress', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                        </div>
+                        <div class="border-t border-slate-100 pt-4 mt-2">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">賣方 (本公司資訊)</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">公司名稱</label>
+                                    <input type="text" id="edit-sellerCompany" oninput="updateField('sellerCompany', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">業務代表</label>
+                                    <input type="text" id="edit-salesperson" oninput="updateField('salesperson', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mt-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">公司電話</label>
+                                    <input type="text" id="edit-sellerPhone" oninput="updateField('sellerPhone', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">傳真號碼</label>
+                                    <input type="text" id="edit-sellerFax" oninput="updateField('sellerFax', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <label class="block text-xs font-bold text-slate-500 mb-1">公司地址</label>
+                                <input type="text" id="edit-sellerAddress" oninput="updateField('sellerAddress', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: Items Details -->
+                    <div id="tab-content-items" class="hidden space-y-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-slate-400">產品與施工細項明細</span>
+                            <button onclick="addNewRow()" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded text-xs font-semibold flex items-center gap-1">
+                                ＋ 新增細項
+                            </button>
+                        </div>
+                        <div id="edit-items-container" class="space-y-4">
+                            <!-- Rows dynamically populated here -->
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: Site & Installation Details -->
+                    <div id="tab-content-details" class="hidden space-y-4">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">現場尺寸與規格</h3>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">門洞最大</label>
+                                <input type="text" id="edit-doorMax" oninput="updateSpec('doorMax', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">門洞最小</label>
+                                <input type="text" id="edit-doorMin" oninput="updateSpec('doorMin', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">大門尺寸</label>
+                                <input type="text" id="edit-doorSize" oninput="updateSpec('doorSize', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">開向備註</label>
+                            <input type="text" id="edit-doorOpen" oninput="updateSpec('doorOpen', this.value)" placeholder="例：孔塞19mm, 靠外側置中" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
+                        </div>
+
+                        <div class="border-t border-slate-100 pt-4 mt-2">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">施工與搬運條件 (Checkboxes)</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 text-xs text-slate-600">
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-shipping" onchange="updateCheckSpec('shipping', this.checked)"> 前天出貨
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-cementGate" onchange="updateCheckSpec('cementGate', this.checked)"> 客戶留水泥灌門檻
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-floor1" onchange="updateCheckSpec('floor1', this.checked)"> 一樓可放置
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-isBuilding" onchange="updateCheckSpec('isBuilding', this.checked)"> 大樓
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-isApartment" onchange="updateCheckSpec('isApartment', this.checked)"> 公寓
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-noDoor" onchange="updateCheckSpec('noDoor', this.checked)"> 無門
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-hasDoorMorning" onchange="updateCheckSpec('hasDoorMorning', this.checked)"> 有門客戶上午拆除
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-tempDoor" onchange="updateCheckSpec('tempDoor', this.checked)"> 臨時門
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-elevator" onchange="updateCheckSpec('elevator', this.checked)"> 有電梯
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-frameCarry" onchange="updateCheckSpec('frameCarry', this.checked)"> 框搬
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-fanCarry" onchange="updateCheckSpec('fanCarry', this.checked)"> 扇搬
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-crane" onchange="updateCheckSpec('crane', this.checked)"> 吊車
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-woodboard" onchange="updateCheckSpec('woodboard', this.checked)"> 木板
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-wallTrim" onchange="updateCheckSpec('wallTrim', this.checked)"> 修牆
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-designer" onchange="updateCheckSpec('designer', this.checked)"> 設計師
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chk-onlyChangeDoor" onchange="updateCheckSpec('onlyChangeDoor', this.checked)"> 只有換門
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">丈量人員</label>
+                                <input type="text" id="edit-measuringStaff" oninput="updateSpec('measuringStaff', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">安裝人員</label>
+                                <input type="text" id="edit-installStaff" oninput="updateSpec('installStaff', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-100 pt-4 mt-2">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">合約備註及除外條款細則</label>
+                            <textarea id="edit-extraNotes" oninput="updateField('extraNotes', this.value)" rows="5" class="w-full border border-slate-200 rounded p-3 text-xs leading-relaxed"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: Layout and Formatting -->
+                    <div id="tab-content-style" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">報價單風格配色</label>
+                            <div class="grid grid-cols-3 gap-3">
+                                <button onclick="setTheme('navy')" class="border-2 border-indigo-600 bg-white p-2 rounded text-xs font-bold text-slate-700 hover:bg-slate-50">高雅海軍藍</button>
+                                <button onclick="setTheme('charcoal')" class="border bg-white p-2 rounded text-xs font-bold text-slate-700 hover:bg-slate-50">精鍊墨黑灰</button>
+                                <button onclick="setTheme('forest')" class="border bg-white p-2 rounded text-xs font-bold text-slate-700 hover:bg-slate-50">環保森林綠</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">版面緊湊度 (調整表格高寬度以符合單張 A4)</label>
+                            <select id="edit-density" onchange="setDensity(this.value)" class="w-full border border-slate-200 rounded p-2 text-sm bg-white">
+                                <option value="tight">精簡（適用項目多、合約條款長）</option>
+                                <option value="normal" selected>標準（推薦最優美觀感）</option>
+                                <option value="loose">寬鬆（項目少時加大行高）</option>
+                            </select>
+                        </div>
+                        <div class="border-t border-slate-100 pt-4">
+                            <label class="block text-xs font-bold text-slate-500 mb-2">現場行動客戶快速手寫簽名</label>
+                            <div class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                                <canvas id="sig-canvas" width="300" height="120" class="w-full bg-white block"></canvas>
+                                <div class="p-2 border-t border-slate-200 bg-slate-100 flex justify-between">
+                                    <button onclick="clearSignature()" class="px-2.5 py-1 text-xs text-slate-500 hover:text-red-500 font-semibold transition-colors">清除簽名</button>
+                                    <button onclick="saveSignature()" class="px-3 py-1 bg-indigo-600 text-white rounded text-xs font-semibold hover:bg-indigo-700 transition-colors">確定帶入合約</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Interactive Paper PDF Preview -->
+        <section class="w-full lg:w-[55%] flex flex-col items-center">
+            
+            <div class="no-print w-full max-w-[210mm] flex justify-between items-center mb-3">
+                <span class="text-sm font-semibold text-slate-500 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-emerald-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>
+                    A4 PDF 即時渲染預覽
+                </span>
+                <span class="text-xs text-slate-400">列印時將自動隱藏多餘操作按鈕</span>
+            </div>
+
+            <!-- Printable container starts here -->
+            <div id="print-area" class="preview-page">
+                
+                <!-- Theme styling bar (Accent line) -->
+                <div id="preview-accent-bar" class="absolute top-0 left-0 right-0 h-2.5 bg-indigo-900"></div>
+
+                <!-- Document Title -->
+                <div class="text-center mt-3 mb-6">
+                    <h2 id="view-title" class="text-2xl font-extrabold tracking-wide text-slate-900 pb-2 border-b border-double border-slate-300">長鋐門窗有限公司合約書</h2>
+                </div>
+
+                <!-- Parties Information Block -->
+                <div class="grid grid-cols-2 gap-x-8 gap-y-2.5 text-xs text-slate-700 mb-5 leading-relaxed">
+                    <!-- Left: Buyer Details -->
+                    <div class="space-y-1">
+                        <div><strong class="text-slate-900">購買人簽名：</strong> <span id="view-buyer" class="underline underline-offset-4 decoration-dashed text-slate-800 font-bold"></span></div>
+                        <div><strong class="text-slate-900">身分證字號：</strong> <span id="view-buyerId"></span></div>
+                        <div><strong class="text-slate-900">聯絡地址：</strong> <span id="view-buyerAddress"></span></div>
+                        <div><strong class="text-slate-900">聯絡電話：</strong> <span id="view-buyerPhone"></span></div>
+                        <div><strong class="text-slate-900">施工工地：</strong> <span id="view-siteAddress" class="text-slate-900 font-medium"></span></div>
+                    </div>
+                    <!-- Right: Seller Details -->
+                    <div class="space-y-1 bg-slate-50/50 p-2.5 rounded border border-slate-100">
+                        <div><strong class="text-slate-900">出賣公司：</strong> <span id="view-sellerCompany" class="font-bold"></span></div>
+                        <div><strong class="text-slate-900">公司地址：</strong> <span id="view-sellerAddress"></span></div>
+                        <div><strong class="text-slate-900">公司電話：</strong> <span id="view-sellerPhone"></span></div>
+                        <div><strong class="text-slate-900">傳真號碼：</strong> <span id="view-sellerFax"></span></div>
+                        <div class="flex justify-between">
+                            <div><strong class="text-slate-900">業務人員：</strong> <span id="view-salesperson"></span></div>
+                            <div><strong class="text-slate-900">報價日期：</strong> <span id="view-date" class="font-bold"></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Details Grid -->
+                <table class="w-full border-collapse border border-slate-300 text-xs text-slate-700 mb-4 overflow-hidden">
+                    <thead>
+                        <tr id="preview-table-header" class="bg-indigo-900 text-white font-bold text-center border-b border-slate-300">
+                            <th class="border border-slate-300 py-2 px-1 w-[6%]">項次</th>
+                            <th class="border border-slate-300 py-2 px-2 w-[44%] text-left">品名規格及施工內容</th>
+                            <th class="border border-slate-300 py-2 px-1 w-[12%]">規格尺寸</th>
+                            <th class="border border-slate-300 py-2 px-1 w-[8%]">數量</th>
+                            <th class="border border-slate-300 py-2 px-1.5 w-[12%] text-right">單價</th>
+                            <th class="border border-slate-300 py-2 px-1.5 w-[14%] text-right">複價</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-table-body" class="divide-y divide-slate-200">
+                        <!-- Items rendered by javascript -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-slate-50 font-bold border-t border-slate-300">
+                            <td colspan="4" class="border border-slate-300 py-2.5 px-3 text-left">
+                                <span class="text-slate-500 font-medium mr-2">總金額大寫：</span>
+                                <span id="view-grandTotalChinese" class="text-slate-900 tracking-wide text-sm">零元整</span>
+                            </td>
+                            <td class="border border-slate-300 py-2.5 px-1.5 text-center text-slate-600">合計</td>
+                            <td class="border border-slate-300 py-2.5 px-2 text-right text-slate-900 text-sm font-black" id="view-grandTotal">
+                                NT$ 0
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <!-- Bottom Parameters and Checklists Grid -->
+                <div class="border border-slate-300 rounded p-3 text-xs text-slate-600 mb-4 bg-slate-50/30 leading-relaxed grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <!-- Column 1: Dimensions -->
+                    <div class="md:col-span-5 space-y-1.5 border-b md:border-b-0 md:border-r border-slate-200 pb-3 md:pb-0 md:pr-3">
+                        <div><strong class="text-slate-900">門洞最大：</strong> <span id="view-doorMax" class="font-mono">--</span></div>
+                        <div><strong class="text-slate-900">門洞最小：</strong> <span id="view-doorMin" class="font-mono">--</span></div>
+                        <div><strong class="text-slate-900">大門尺寸：</strong> <span id="view-doorSize" class="font-mono">--</span></div>
+                        <div><strong class="text-slate-900">開向備註：</strong> <span id="view-doorOpen">--</span></div>
+                    </div>
+                    <!-- Column 2: Working Checklist Options -->
+                    <div class="md:col-span-7 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+                        <div class="flex items-center gap-1"><span id="view-chk-shipping" class="text-slate-400">□</span> 前天出貨</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-cementGate" class="text-slate-400">□</span> 客戶留水泥灌門檻</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-floor1" class="text-slate-400">□</span> 一樓可放置</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-isBuilding" class="text-slate-400">□</span> 大樓</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-isApartment" class="text-slate-400">□</span> 公寓</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-noDoor" class="text-slate-400">□</span> 無門</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-hasDoorMorning" class="text-slate-400">□</span> 客戶上午拆除</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-tempDoor" class="text-slate-400">□</span> 臨時門</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-elevator" class="text-slate-400">□</span> 有電梯</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-frameCarry" class="text-slate-400">□</span> 框搬</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-fanCarry" class="text-slate-400">□</span> 扇搬</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-crane" class="text-slate-400">□</span> 吊車</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-woodboard" class="text-slate-400">□</span> 木板</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-wallTrim" class="text-slate-400">□</span> 修牆</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-designer" class="text-slate-400">□</span> 設計師</div>
+                        <div class="flex items-center gap-1"><span id="view-chk-onlyChangeDoor" class="text-slate-400">□</span> 只有換門</div>
+                    </div>
+                </div>
+
+                <!-- Terms & Disclaimers -->
+                <div class="border border-slate-200 rounded p-3 text-[10px] text-slate-500 leading-relaxed space-y-1 mb-5 bg-white">
+                    <strong class="text-slate-700 block mb-1 text-xs">合約條款與保固細則：</strong>
+                    <div id="view-extraNotes" class="whitespace-pre-line text-[10px]">
+                        1. 產品保固以保固證明書為準，如因天災、人為操作不當或外力影響不予保固。
+                        2. 實木為天然素材，因氣候與濕度環境變化產生的輕微細紋或形變屬自然現象。
+                    </div>
+                </div>
+
+                <!-- Signatures & Stamps Footer -->
+                <div class="grid grid-cols-3 gap-6 text-xs text-slate-700 mt-6 pt-4 border-t border-dashed border-slate-300">
+                    <div class="space-y-4">
+                        <div>購買人確認簽章：</div>
+                        <div class="h-16 flex items-end">
+                            <img id="view-buyer-signature" src="" class="hidden max-h-14 max-w-full" alt="客戶簽章">
+                            <span id="sig-placeholder" class="text-slate-300 italic text-[11px] border-b border-slate-300 w-full block pb-1">（請於設定頁面進行電子簽章）</span>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div>丈量人員：<span id="view-measuringStaff" class="font-medium underline decoration-slate-300 ml-1"></span></div>
+                        <div>安裝人員：<span id="view-installStaff" class="font-medium underline decoration-slate-300 ml-1"></span></div>
+                    </div>
+                    <div class="space-y-4 text-right">
+                        <div>出賣人（公司簽章）：</div>
+                        <div class="h-16 flex items-end justify-end">
+                            <div class="border-2 border-red-500 text-red-500 font-extrabold p-1 text-[10px] tracking-widest rounded rotate-[-3deg] uppercase">
+                                長鋐門窗有限公司印
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="no-print bg-slate-800 text-slate-400 py-4 text-center text-xs mt-auto border-t border-slate-700">
+        <p>© 2026 長鋐門窗有限公司 & PDF 智慧財稅工程合約報價引擎. All rights reserved.</p>
+    </footer>
+
+    <!-- Core Interactive Logic Script -->
+    <script>
+        // State variables
+        let appState = {
+            title: "長鋐門窗有限公司合約書",
+            buyer: "",
+            buyerId: "",
+            buyerAddress: "",
+            buyerPhone: "",
+            siteAddress: "",
+            sellerCompany: "長鋐門窗有限公司",
+            sellerAddress: "北市民族東路192號1樓",
+            sellerPhone: "02-2595-8138、2595-5676",
+            sellerFax: "02-2595-7865",
+            sellerEmail: "chdoor88@yahoo.com.tw",
+            sellerWeb: "http://www.door-king.com.tw",
+            salesperson: "林小姐",
+            date: "",
+            extraNotes: "",
+            items: [],
+            siteSpecs: {
+                doorMax: "",
+                doorMin: "",
+                doorSize: "",
+                doorOpen: "",
+                measuringStaff: "",
+                installStaff: "",
+                shipping: false,
+                cementGate: false,
+                floor1: false,
+                isBuilding: false,
+                isApartment: false,
+                noDoor: false,
+                hasDoorMorning: false,
+                tempDoor: false,
+                elevator: false,
+                frameCarry: false,
+                fanCarry: false,
+                crane: false,
+                woodboard: false,
+                wallTrim: false,
+                designer: false,
+                onlyChangeDoor: false
+            }
+        };
+
+        // Initialize App on Window Load
+        window.onload = function() {
+            // Drag and Drop implementation
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+
+            fileInput.addEventListener('change', handleFileSelect);
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('bg-indigo-100', 'border-indigo-600');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('bg-indigo-100', 'border-indigo-600');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('bg-indigo-100', 'border-indigo-600');
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileSelect({ target: fileInput });
+                }
+            });
+
+            // Signature Pad implementation
+            initSignaturePad();
+
+            // Load Default Demo
+            loadSampleData();
+        };
+
+        // Load Predefined Sample Data mimicking the uploaded CSV
+        function loadSampleData() {
+            appState = {
+                title: "長鋐門窗有限公司合約書",
+                buyer: "張先生",
+                buyerId: "",
+                buyerAddress: "北市松山區民生東路五段153號6樓之12",
+                buyerPhone: "0906-170-910",
+                siteAddress: "北市松山區民生東路五段153號6樓之12",
+                sellerCompany: "長鋐門窗有限公司",
+                sellerAddress: "北市民族東路192號1樓",
+                sellerPhone: "02-2595-8138、2595-5676",
+                sellerFax: "02-2595-7865",
+                sellerEmail: "chdoor88@yahoo.com.tw",
+                sellerWeb: "http://www.door-king.com.tw",
+                salesperson: "林小姐",
+                date: "民國115年07月09日",
+                extraNotes: "1. 實木為天然素材，如因環境、氣候…等自然影響，而有木飾材受潮、龜裂變形、鑄鋁/碳纖板氧化或玻璃起霧屬自然現象，故不在保固範圍內；本公司售出的木飾材不具備防水功能。\n2. 賣方研發雙氣密、三氣密…等工法不等同專業隔音門製作工法，如需要專業隔音門的產品系列，需事先特別告知，並於此合約單備註上確認明訂內容！",
+                items: [
+                    {
+                        id: 1,
+                        name: "內玄關:CK-1015流蘇雙面壓花\n(格子底紋.F60A防火+具遮煙性證明+外掛式門弓器)\n*整樘鍍鋅鋼板粉體烤漆(無防水)\n*烤漆顏色：灰砂藍\n*門鎖：台製防火一般內轉五金",
+                        spec: "100 * 215 * 12",
+                        qty: 1,
+                        price: 73500,
+                        subtotal: 73500,
+                        notes: ""
+                    }
+                ],
+                siteSpecs: {
+                    doorMax: "X x X",
+                    doorMin: "X x X",
+                    doorSize: "X x X",
+                    doorOpen: "孔塞19mm, 靠外側置中",
+                    measuringStaff: "林大同",
+                    installStaff: "張小華",
+                    shipping: false,
+                    cementGate: true,
+                    floor1: true,
+                    isBuilding: true,
+                    isApartment: false,
+                    noDoor: false,
+                    hasDoorMorning: false,
+                    tempDoor: false,
+                    elevator: true,
+                    frameCarry: false,
+                    fanCarry: false,
+                    crane: false,
+                    woodboard: false,
+                    wallTrim: false,
+                    designer: false,
+                    onlyChangeDoor: true
+                }
+            };
+
+            updateFormInputs();
+            renderPreview();
+            
+            // Show Status
+            const statusDiv = document.getElementById('file-status');
+            const statusText = document.getElementById('file-status-text');
+            statusDiv.classList.remove('hidden');
+            statusText.innerText = "已載入張先生範例合約報價規格";
+        }
+
+        // File Handler for xlsx or csv parsing
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Get 2D raw cells array
+                const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+                parseExcelOrCSV(rawData);
+            };
+            reader.readAsArrayBuffer(file);
+
+            // Update UI feedback
+            const statusDiv = document.getElementById('file-status');
+            const statusText = document.getElementById('file-status-text');
+            statusDiv.classList.remove('hidden');
+            statusText.innerText = `成功分析並匯入檔案：${file.name}`;
+        }
+
+        // Intelligent parsing function mimicking the structures of Taiwanese door contracts
+        function parseExcelOrCSV(rawData) {
+            let foundTitle = "";
+            let newItems = [];
+            let inTable = false;
+            let tableHeaderRowIndex = -1;
+
+            let colIdxMap = { item: -1, name: -1, spec: -1, qty: -1, price: -1, subtotal: -1, note: -1 };
+
+            // Scan rows
+            for (let r = 0; r < rawData.length; r++) {
+                const row = rawData[r];
+                if (!row || row.length === 0) continue;
+
+                const rowStr = row.map(c => String(c).trim()).join(' ');
+
+                // 1. Detect Title
+                if (!foundTitle && (rowStr.includes("合約書") || rowStr.includes("報價單") || rowStr.includes("估價單"))) {
+                    for (let c = 0; c < row.length; c++) {
+                        const cellVal = String(row[c]).trim();
+                        if (cellVal.includes("合約書") || cellVal.includes("報價單") || cellVal.includes("估價單")) {
+                            appState.title = cellVal;
+                            foundTitle = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 2. Identify Metadata key-value mappings
+                for (let c = 0; c < row.length; c++) {
+                    const cellStr = String(row[c]).trim();
+                    if (!cellStr) continue;
+
+                    if (cellStr.includes("購買人") || cellStr.includes("客戶名稱")) {
+                        let nextVal = extractFieldVal(row, c, /購買人(簽名)?[：:]?/);
+                        if (nextVal) appState.buyer = nextVal;
+                    }
+                    if (cellStr.includes("身分證")) {
+                        let nextVal = extractFieldVal(row, c, /身分證字號[：:]?/);
+                        if (nextVal) appState.buyerId = nextVal;
+                    }
+                    if (cellStr.includes("公司：") || cellStr.includes("公   司：")) {
+                        let nextVal = extractFieldVal(row, c, /公\s*司[：:]?/);
+                        if (nextVal) appState.sellerCompany = nextVal;
+                    }
+                    if (cellStr.includes("公司地址") || cellStr.match(/^地\s*址[：:]?/)) {
+                        let nextVal = extractFieldVal(row, c, /(公司地址|地\s*址)[：:]?/);
+                        if (nextVal) {
+                            if (cellStr.includes("公司")) appState.sellerAddress = nextVal;
+                            else { appState.buyerAddress = nextVal; appState.siteAddress = nextVal; }
+                        }
+                    }
+                    if (cellStr.includes("公司電話") || cellStr.match(/^電\s*話[：:]?/)) {
+                        let nextVal = extractFieldVal(row, c, /(公司電話|電\s*話)[：:]?/);
+                        if (nextVal) {
+                            if (cellStr.includes("公司")) appState.sellerPhone = nextVal;
+                            else appState.buyerPhone = nextVal;
+                        }
+                    }
+                    if (cellStr.includes("傳真")) {
+                        let nextVal = extractFieldVal(row, c, /(傳真|傳真電話)[：:]?/);
+                        if (nextVal) appState.sellerFax = nextVal;
+                    }
+                    if (cellStr.includes("聯絡人")) {
+                        let nextVal = extractFieldVal(row, c, /聯絡人[：:]?/);
+                        // If it has phone inside it, extract
+                        if (nextVal) {
+                            const telMatch = nextVal.match(/[0-9\-]+/);
+                            if (telMatch) {
+                                appState.buyerPhone = telMatch[0];
+                                appState.buyer = nextVal.replace(telMatch[0], '').trim();
+                            } else {
+                                appState.buyer = nextVal;
+                            }
+                        }
+                    }
+                    if (cellStr.includes("業務人員")) {
+                        let nextVal = extractFieldVal(row, c, /業務人員[：:]?/);
+                        if (nextVal) appState.salesperson = nextVal;
+                    }
+                    if (cellStr.includes("報價日期")) {
+                        let nextVal = extractFieldVal(row, c, /報價日期[：:]?/);
+                        if (nextVal) appState.date = nextVal;
+                    }
+                    if (cellStr.includes("工   地") || cellStr.includes("工地")) {
+                        let nextVal = extractFieldVal(row, c, /(工\s*地|工地)[：:]?/);
+                        if (nextVal) appState.siteAddress = nextVal;
+                    }
+                }
+
+                // 3. Detect Table Header & Switch mode to items reading
+                if (!inTable && (rowStr.includes("項次") || rowStr.includes("品名") || rowStr.includes("品  名"))) {
+                    inTable = true;
+                    tableHeaderRowIndex = r;
+                    // Auto mapping columns
+                    for (let c = 0; c < row.length; c++) {
+                        const cellVal = String(row[c]).replace(/\s+/g, '');
+                        if (cellVal.includes("項次")) colIdxMap.item = c;
+                        else if (cellVal.includes("品名")) colIdxMap.name = c;
+                        else if (cellVal.includes("規格")) colIdxMap.spec = c;
+                        else if (cellVal.includes("數量")) colIdxMap.qty = c;
+                        else if (cellVal.includes("單價")) colIdxMap.price = c;
+                        else if (cellVal.includes("複價")) colIdxMap.subtotal = c;
+                        else if (cellVal.includes("備註") || cellVal.includes("五金")) colIdxMap.note = c;
+                    }
+                    continue;
+                }
+
+                // 4. Handle Items Lines
+                if (inTable) {
+                    // Stop Reading table if we find bottom general clauses or checklist
+                    if (rowStr.includes("因實木為天然素材") || rowStr.includes("賣方研發雙氣密") || rowStr.includes("工程地址：") || rowStr.includes("備註：") || rowStr.includes("大門尺寸")) {
+                        inTable = false;
+                        
+                        // Parse Footer fields directly in remainder rows
+                        for (let fr = r; fr < rawData.length; fr++) {
+                            const fRow = rawData[fr];
+                            const fRowStr = fRow.map(cell => String(cell).trim()).filter(Boolean).join(' ');
+                            if (!fRowStr) continue;
+
+                            if (fRowStr.includes("丈量人員")) {
+                                appState.siteSpecs.measuringStaff = fRowStr.split("丈量人員")[1]?.replace(/[：:\s*□☑■]/g, '') || "";
+                            }
+                            if (fRowStr.includes("安裝人員")) {
+                                appState.siteSpecs.installStaff = fRowStr.split("安裝人員")[1]?.replace(/[：:\s*□☑■]/g, '') || "";
+                            }
+                            
+                            // Checkboxes Detection
+                            if (fRowStr.includes("前天出貨") || fRowStr.includes("前       天出貨")) appState.siteSpecs.shipping = true;
+                            if (fRowStr.includes("水泥砂幫灌門檻")) appState.siteSpecs.cementGate = true;
+                            if (fRowStr.includes("一樓可放置")) appState.siteSpecs.floor1 = true;
+                            if (fRowStr.includes("大樓")) appState.siteSpecs.isBuilding = true;
+                            if (fRowStr.includes("公寓")) appState.siteSpecs.isApartment = true;
+                            if (fRowStr.includes("無門")) appState.siteSpecs.noDoor = true;
+                            if (fRowStr.includes("上午拆除")) appState.siteSpecs.hasDoorMorning = true;
+                            if (fRowStr.includes("臨時門")) appState.siteSpecs.tempDoor = true;
+                            if (fRowStr.includes("有電梯")) appState.siteSpecs.elevator = true;
+                            if (fRowStr.includes("框搬")) appState.siteSpecs.frameCarry = true;
+                            if (fRowStr.includes("扇搬")) appState.siteSpecs.fanCarry = true;
+                            if (fRowStr.includes("吊車")) appState.siteSpecs.crane = true;
+                            if (fRowStr.includes("木板")) appState.siteSpecs.woodboard = true;
+                            if (fRowStr.includes("修牆")) appState.siteSpecs.wallTrim = true;
+                            if (fRowStr.includes("設計師")) appState.siteSpecs.designer = true;
+                            if (fRowStr.includes("只有換門")) appState.siteSpecs.onlyChangeDoor = true;
+
+                            // Dimensions Extractions
+                            if (fRowStr.includes("門洞最大")) {
+                                const m = fRowStr.match(/門洞最大\s*([^\s,☑□X*x]+(\s*[X*x]\s*[^\s,☑□X*x]+)*)/);
+                                if (m) appState.siteSpecs.doorMax = m[1];
+                            }
+                            if (fRowStr.includes("門洞最小")) {
+                                const m = fRowStr.match(/門洞最小\s*([^\s,☑□X*x]+(\s*[X*x]\s*[^\s,☑□X*x]+)*)/);
+                                if (m) appState.siteSpecs.doorMin = m[1];
+                            }
+                            if (fRowStr.includes("大門尺寸")) {
+                                const m = fRowStr.match(/大門尺寸\s*([^\s,☑□X*x]+(\s*[X*x]\s*[^\s,☑□X*x]+)*)/);
+                                if (m) appState.siteSpecs.doorSize = m[1];
+                            }
+                            if (fRowStr.includes("開向：")) {
+                                appState.siteSpecs.doorOpen = fRowStr.split("開向：")[1] || "";
+                            }
+                        }
+                        break;
+                    }
+
+                    const getVal = (col) => (col !== -1 && row[col] !== undefined) ? String(row[col]).trim() : "";
+
+                    const rawItemNo = getVal(colIdxMap.item);
+                    const rawName = getVal(colIdxMap.name);
+                    const rawSpec = getVal(colIdxMap.spec);
+                    const rawQty = parseFloat(getVal(colIdxMap.qty)) || "";
+                    const rawPrice = parseFloat(getVal(colIdxMap.price)) || "";
+                    const rawSub = parseFloat(getVal(colIdxMap.subtotal)) || "";
+                    const rawNote = getVal(colIdxMap.note);
+
+                    // If we have an Item number, it is a new main item
+                    if (rawItemNo && !isNaN(rawItemNo)) {
+                        newItems.push({
+                            id: parseInt(rawItemNo),
+                            name: rawName,
+                            spec: rawSpec,
+                            qty: rawQty,
+                            price: rawPrice,
+                            subtotal: rawSub || (rawQty && rawPrice ? rawQty * rawPrice : 0),
+                            notes: rawNote
+                        });
+                    } else {
+                        // Append descriptions to preceding row (sub-descriptions for specifications)
+                        if (newItems.length > 0) {
+                            const prev = newItems[newItems.length - 1];
+                            let additions = [];
+                            if (rawName) additions.push(rawName);
+                            if (rawNote) additions.push(rawNote);
+                            if (additions.length > 0) {
+                                prev.name += "\n" + additions.join(" ");
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (newItems.length > 0) {
+                appState.items = newItems;
+            }
+
+            updateFormInputs();
+            renderPreview();
+        }
+
+        // Helper extract value next to keyword
+        function extractFieldVal(row, colIdx, regex) {
+            let str = String(row[colIdx]).trim();
+            let cleaned = str.replace(regex, '').trim();
+            if (cleaned) return cleaned;
+            if (colIdx + 1 < row.length) {
+                return String(row[colIdx + 1]).trim();
+            }
+            return "";
+        }
+
+        // Re-calculate Grand Total & Convert to Traditional Chinese Financial Format
+        function calculateGrandTotal() {
+            let total = 0;
+            appState.items.forEach(item => {
+                total += parseFloat(item.subtotal) || 0;
+            });
+            return total;
+        }
+
+        // Traditional Chinese Financial Numbers Converter
+        function numberToChinese(num) {
+            if (isNaN(num)) return "零元整";
+            const digits = ["零", "壹", "貳", "參", "肆", "伍", "陸", "柒", "捌", "玖"];
+            const units = ["", "拾", "佰", "仟"];
+            const bigUnits = ["", "萬", "億", "兆"];
+            
+            let str = Math.round(num).toString();
+            if (str === "0") return "零元整";
+            
+            let result = "";
+            let len = str.length;
+            
+            for (let i = 0; i < len; i++) {
+                let digit = parseInt(str[i]);
+                let pos = len - 1 - i; 
+                let unitPos = pos % 4;
+                let bigUnitPos = Math.floor(pos / 4);
+                
+                if (digit !== 0) {
+                    result += digits[digit] + units[unitPos];
+                } else {
+                    if (result.length > 0 && result[result.length - 1] !== "零" && unitPos !== 0) {
+                        result += "零";
+                    }
+                }
+                
+                if (unitPos === 0 && bigUnitPos > 0) {
+                    if (result.endsWith("零")) {
+                        result = result.slice(0, -1);
+                    }
+                    result += bigUnits[bigUnitPos];
+                }
+            }
+            
+            if (result.endsWith("零")) {
+                result = result.slice(0, -1);
+            }
+            
+            return result ? "新台幣 " + result + " 元整" : "零元整";
+        }
+
+        // Update Inputs values from State
+        function updateFormInputs() {
+            document.getElementById('edit-title').value = appState.title;
+            document.getElementById('edit-buyer').value = appState.buyer;
+            document.getElementById('edit-buyerId').value = appState.buyerId;
+            document.getElementById('edit-buyerPhone').value = appState.buyerPhone;
+            document.getElementById('edit-date').value = appState.date;
+            document.getElementById('edit-siteAddress').value = appState.siteAddress;
+            document.getElementById('edit-sellerCompany').value = appState.sellerCompany;
+            document.getElementById('edit-salesperson').value = appState.salesperson;
+            document.getElementById('edit-sellerPhone').value = appState.sellerPhone;
+            document.getElementById('edit-sellerFax').value = appState.sellerFax;
+            document.getElementById('edit-sellerAddress').value = appState.sellerAddress;
+            document.getElementById('edit-extraNotes').value = appState.extraNotes;
+
+            // Dimensions
+            document.getElementById('edit-doorMax').value = appState.siteSpecs.doorMax;
+            document.getElementById('edit-doorMin').value = appState.siteSpecs.doorMin;
+            document.getElementById('edit-doorSize').value = appState.siteSpecs.doorSize;
+            document.getElementById('edit-doorOpen').value = appState.siteSpecs.doorOpen;
+            document.getElementById('edit-measuringStaff').value = appState.siteSpecs.measuringStaff;
+            document.getElementById('edit-installStaff').value = appState.siteSpecs.installStaff;
+
+            // Checkboxes
+            document.getElementById('chk-shipping').checked = appState.siteSpecs.shipping;
+            document.getElementById('chk-cementGate').checked = appState.siteSpecs.cementGate;
+            document.getElementById('chk-floor1').checked = appState.siteSpecs.floor1;
+            document.getElementById('chk-isBuilding').checked = appState.siteSpecs.isBuilding;
+            document.getElementById('chk-isApartment').checked = appState.siteSpecs.isApartment;
+            document.getElementById('chk-noDoor').checked = appState.siteSpecs.noDoor;
+            document.getElementById('chk-hasDoorMorning').checked = appState.siteSpecs.hasDoorMorning;
+            document.getElementById('chk-tempDoor').checked = appState.siteSpecs.tempDoor;
+            document.getElementById('chk-elevator').checked = appState.siteSpecs.elevator;
+            document.getElementById('chk-frameCarry').checked = appState.siteSpecs.frameCarry;
+            document.getElementById('chk-fanCarry').checked = appState.siteSpecs.fanCarry;
+            document.getElementById('chk-crane').checked = appState.siteSpecs.crane;
+            document.getElementById('chk-woodboard').checked = appState.siteSpecs.woodboard;
+            document.getElementById('chk-wallTrim').checked = appState.siteSpecs.wallTrim;
+            document.getElementById('chk-designer').checked = appState.siteSpecs.designer;
+            document.getElementById('chk-onlyChangeDoor').checked = appState.siteSpecs.onlyChangeDoor;
+
+            renderItemsEditor();
+        }
+
+        // Render editable dynamic Rows in left panel
+        function renderItemsEditor() {
+            const container = document.getElementById('edit-items-container');
+            container.innerHTML = "";
+
+            appState.items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-slate-50 rounded-lg border border-slate-200 relative space-y-3";
+                div.innerHTML = `
+                    <button onclick="deleteRow(${index})" class="absolute top-2.5 right-2.5 text-slate-400 hover:text-red-500 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">項次 ${index + 1}</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-0.5">品名施工內容</label>
+                        <textarea oninput="updateItemField(${index}, 'name', this.value)" rows="3" class="w-full border border-slate-200 rounded px-2 py-1 text-xs">${item.name}</textarea>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2">
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">規格尺寸</label>
+                            <input type="text" value="${item.spec}" oninput="updateItemField(${index}, 'spec', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">數量</label>
+                            <input type="number" value="${item.qty}" oninput="updateItemField(${index}, 'qty', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">單價</label>
+                            <input type="number" value="${item.price}" oninput="updateItemField(${index}, 'price', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-xs">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Live update model attributes
+        function updateField(key, value) {
+            appState[key] = value;
+            renderPreview();
+        }
+
+        function updateSpec(key, value) {
+            appState.siteSpecs[key] = value;
+            renderPreview();
+        }
+
+        function updateCheckSpec(key, value) {
+            appState.siteSpecs[key] = value;
+            renderPreview();
+        }
+
+        function updateItemField(index, field, value) {
+            if (field === 'qty' || field === 'price') {
+                appState.items[index][field] = parseFloat(value) || 0;
+                appState.items[index].subtotal = appState.items[index].qty * appState.items[index].price;
+            } else {
+                appState.items[index][field] = value;
+            }
+            renderPreview();
+        }
+
+        function addNewRow() {
+            appState.items.push({
+                id: appState.items.length + 1,
+                name: "新工程品目",
+                spec: "",
+                qty: 1,
+                price: 0,
+                subtotal: 0,
+                notes: ""
+            });
+            updateFormInputs();
+            renderPreview();
+        }
+
+        function deleteRow(index) {
+            appState.items.splice(index, 1);
+            // Re-index remaining
+            appState.items.forEach((item, idx) => {
+                item.id = idx + 1;
+            });
+            updateFormInputs();
+            renderPreview();
+        }
+
+        // Master Render function for Preview Paper (A4 container)
+        function renderPreview() {
+            document.getElementById('view-title').innerText = appState.title || "合約書";
+            document.getElementById('view-buyer').innerText = appState.buyer || "（請輸入客戶）";
+            document.getElementById('view-buyerId').innerText = appState.buyerId || "--";
+            document.getElementById('view-buyerAddress').innerText = appState.buyerAddress || appState.siteAddress || "--";
+            document.getElementById('view-buyerPhone').innerText = appState.buyerPhone || "--";
+            document.getElementById('view-siteAddress').innerText = appState.siteAddress || "--";
+            document.getElementById('view-sellerCompany').innerText = appState.sellerCompany;
+            document.getElementById('view-sellerAddress').innerText = appState.sellerAddress;
+            document.getElementById('view-sellerPhone').innerText = appState.sellerPhone;
+            document.getElementById('view-sellerFax').innerText = appState.sellerFax;
+            document.getElementById('view-salesperson').innerText = appState.salesperson;
+            document.getElementById('view-date').innerText = appState.date || "民國    年   月   日";
+
+            // Populate Table
+            const tbody = document.getElementById('preview-table-body');
+            tbody.innerHTML = "";
+
+            appState.items.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="border border-slate-300 py-1.5 px-1 text-center font-mono font-bold">${item.id}</td>
+                    <td class="border border-slate-300 py-1.5 px-2 font-medium whitespace-pre-wrap text-[11px] leading-relaxed">${item.name}</td>
+                    <td class="border border-slate-300 py-1.5 px-1 text-center font-mono">${item.spec || '--'}</td>
+                    <td class="border border-slate-300 py-1.5 px-1 text-center font-bold">${item.qty}</td>
+                    <td class="border border-slate-300 py-1.5 px-2 text-right font-mono">${item.price ? 'NT$ ' + item.price.toLocaleString() : '--'}</td>
+                    <td class="border border-slate-300 py-1.5 px-2 text-right font-mono font-bold text-slate-900">${item.subtotal ? 'NT$ ' + item.subtotal.toLocaleString() : 'NT$ 0'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Handle Empty Spacer row if layout is loose
+            if (appState.items.length < 4) {
+                const emptyCount = 4 - appState.items.length;
+                for (let i = 0; i < emptyCount; i++) {
+                    const tr = document.createElement('tr');
+                    tr.className = "h-8";
+                    tr.innerHTML = `
+                        <td class="border border-slate-300"></td>
+                        <td class="border border-slate-300"></td>
+                        <td class="border border-slate-300"></td>
+                        <td class="border border-slate-300"></td>
+                        <td class="border border-slate-300"></td>
+                        <td class="border border-slate-300"></td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            }
+
+            // Calculations
+            const grandTotal = calculateGrandTotal();
+            document.getElementById('view-grandTotal').innerText = `NT$ ${grandTotal.toLocaleString()}`;
+            document.getElementById('view-grandTotalChinese').innerText = numberToChinese(grandTotal);
+
+            // Spec & Checkboxes Render
+            document.getElementById('view-doorMax').innerText = appState.siteSpecs.doorMax || "--";
+            document.getElementById('view-doorMin').innerText = appState.siteSpecs.doorMin || "--";
+            document.getElementById('view-doorSize').innerText = appState.siteSpecs.doorSize || "--";
+            document.getElementById('view-doorOpen').innerText = appState.siteSpecs.doorOpen || "--";
+            document.getElementById('view-measuringStaff').innerText = appState.siteSpecs.measuringStaff || "--";
+            document.getElementById('view-installStaff').innerText = appState.siteSpecs.installStaff || "--";
+
+            // Checklist Symbols Update
+            const renderChk = (elementId, checked) => {
+                document.getElementById(elementId).innerText = checked ? "☑" : "□";
+                document.getElementById(elementId).className = checked ? "text-indigo-600 font-extrabold font-mono" : "text-slate-400 font-mono";
+            };
+
+            renderChk('view-chk-shipping', appState.siteSpecs.shipping);
+            renderChk('view-chk-cementGate', appState.siteSpecs.cementGate);
+            renderChk('view-chk-floor1', appState.siteSpecs.floor1);
+            renderChk('view-chk-isBuilding', appState.siteSpecs.isBuilding);
+            renderChk('view-chk-isApartment', appState.siteSpecs.isApartment);
+            renderChk('view-chk-noDoor', appState.siteSpecs.noDoor);
+            renderChk('view-chk-hasDoorMorning', appState.siteSpecs.hasDoorMorning);
+            renderChk('view-chk-tempDoor', appState.siteSpecs.tempDoor);
+            renderChk('view-chk-elevator', appState.siteSpecs.elevator);
+            renderChk('view-chk-frameCarry', appState.siteSpecs.frameCarry);
+            renderChk('view-chk-fanCarry', appState.siteSpecs.fanCarry);
+            renderChk('view-chk-crane', appState.siteSpecs.crane);
+            renderChk('view-chk-woodboard', appState.siteSpecs.woodboard);
+            renderChk('view-chk-wallTrim', appState.siteSpecs.wallTrim);
+            renderChk('view-chk-designer', appState.siteSpecs.designer);
+            renderChk('view-chk-onlyChangeDoor', appState.siteSpecs.onlyChangeDoor);
+
+            // Extra notes
+            document.getElementById('view-extraNotes').innerText = appState.extraNotes || "無備註。";
+        }
+
+        // Form tabs toggler
+        function switchTab(tab) {
+            ['basic', 'items', 'details', 'style'].forEach(t => {
+                document.getElementById(`tab-content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).classList.remove('border-indigo-600', 'text-indigo-600');
+                document.getElementById(`tab-btn-${t}`).classList.add('border-transparent', 'text-slate-500');
+            });
+            document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tab}`).classList.add('border-indigo-600', 'text-indigo-600');
+            document.getElementById(`tab-btn-${tab}`).classList.remove('border-transparent', 'text-slate-500');
+        }
+
+        // Set Theme Palette for Quote
+        function setTheme(theme) {
+            const bar = document.getElementById('preview-accent-bar');
+            const tableHeader = document.getElementById('preview-table-header');
+            
+            // Standardizes classes
+            bar.className = "absolute top-0 left-0 right-0 h-2.5";
+            tableHeader.className = "text-white font-bold text-center border-b border-slate-300";
+
+            if (theme === 'navy') {
+                bar.classList.add('bg-indigo-900');
+                tableHeader.classList.add('bg-indigo-900');
+            } else if (theme === 'charcoal') {
+                bar.classList.add('bg-slate-800');
+                tableHeader.classList.add('bg-slate-800');
+            } else if (theme === 'forest') {
+                bar.classList.add('bg-emerald-900');
+                tableHeader.classList.add('bg-emerald-900');
+            }
+        }
+
+        // Set PDF Density / Spacing (Tight, Normal, Loose)
+        function setDensity(density) {
+            const table = document.querySelector('#print-area table');
+            if (density === 'tight') {
+                table.className = "w-full border-collapse border border-slate-300 text-[10px] text-slate-700 mb-2";
+            } else if (density === 'normal') {
+                table.className = "w-full border-collapse border border-slate-300 text-xs text-slate-700 mb-4";
+            } else if (density === 'loose') {
+                table.className = "w-full border-collapse border border-slate-300 text-sm text-slate-700 mb-6";
+            }
+        }
+
+        // Signature Pad Drawing Logic
+        let sigCanvas, sigCtx, drawing = false;
+
+        function initSignaturePad() {
+            sigCanvas = document.getElementById('sig-canvas');
+            sigCtx = sigCanvas.getContext('2d');
+            sigCtx.strokeStyle = "#0f172a";
+            sigCtx.lineWidth = 2.5;
+            sigCtx.lineCap = "round";
+
+            // Mouse events
+            sigCanvas.addEventListener('mousedown', startDrawing);
+            sigCanvas.addEventListener('mousemove', draw);
+            sigCanvas.addEventListener('mouseup', stopDrawing);
+            sigCanvas.addEventListener('mouseleave', stopDrawing);
+
+            // Touch events
+            sigCanvas.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                const rect = sigCanvas.getBoundingClientRect();
+                sigCtx.beginPath();
+                sigCtx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+                drawing = true;
+                e.preventDefault();
+            });
+            sigCanvas.addEventListener('touchmove', (e) => {
+                if (!drawing) return;
+                const touch = e.touches[0];
+                const rect = sigCanvas.getBoundingClientRect();
+                sigCtx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+                sigCtx.stroke();
+                e.preventDefault();
+            });
+            sigCanvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function startDrawing(e) {
+            const rect = sigCanvas.getBoundingClientRect();
+            sigCtx.beginPath();
+            sigCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+            drawing = true;
+        }
+
+        function draw(e) {
+            if (!drawing) return;
+            const rect = sigCanvas.getBoundingClientRect();
+            sigCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            sigCtx.stroke();
+        }
+
+        function stopDrawing() {
+            drawing = false;
+        }
+
+        function clearSignature() {
+            sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+            document.getElementById('view-buyer-signature').src = "";
+            document.getElementById('view-buyer-signature').classList.add('hidden');
+            document.getElementById('sig-placeholder').classList.remove('hidden');
+        }
+
+        function saveSignature() {
+            // Check if canvas is blank
+            const blank = document.createElement('canvas');
+            blank.width = sigCanvas.width;
+            blank.height = sigCanvas.height;
+            if (sigCanvas.toDataURL() === blank.toDataURL()) {
+                alert("請先在簽名板上書寫您的簽名！");
+                return;
+            }
+
+            const dataURL = sigCanvas.toDataURL();
+            const img = document.getElementById('view-buyer-signature');
+            img.src = dataURL;
+            img.classList.remove('hidden');
+            document.getElementById('sig-placeholder').classList.add('hidden');
+        }
+
+        // Trigger Standard Browser system print to PDF (Excellent vector typography)
+        function triggerBrowserPrint() {
+            window.print();
+        }
+
+        // Trigger Direct high-quality PDF File Export (Using html2pdf)
+        function exportDirectPDF() {
+            const element = document.getElementById('print-area');
+            const buyerName = appState.buyer || "客戶";
+            const opt = {
+                margin:       10,
+                filename:     `長鋐門窗合約書_${buyerName}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Temporary scale up signature rendering for crisp output
+            html2pdf().from(element).set(opt).save();
+        }
+    </script>
 </body>
 </html>
-
-

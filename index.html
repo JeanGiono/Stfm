@@ -439,7 +439,7 @@ const MAINTENANCE_DATA = [
 {id:106,q:"各單位與承攬人，再承攬人分別僱用勞工共同作業時，為防止職業災害，應採取下列措施?(空軍修護管理作業手冊2章3節1款 P2-70)",a:"D",options:{A:"設置協議組織，並指定工作場所負責人擔任指揮及協調之工作",B:"工作之連繫與調整",C:"相關承攬事業間之工場安全教育之指導及協助",D:"以上皆是"}},
 {id:107,q:"各單位隨裝備接收之技術文件應按規定申編技令號碼送何單位審查納管?(CAF 00-5-22)",a:"C",options:{A:"教準部後勤處",B:"保拓部修護處",C:"教準部技令處",D:"教準部準則處"}},
 {id:108,q:"合格證技術評鑑為使各基地之修護人員學術、技能符合要求標準，並能確切按令執行修護作業，以提升修護品質，下列何者正確?(空軍技術人員實施計畫)",a:"A",options:{A:"分隊級軍官應以工作督導為主(合格證單一等級)，須優先取得修導類別合格證。",B:"合格證B等級:士官長及上士班長應以工作督導、故障研判及檢驗能力為主。",C:"合格證C:等級上士及中士應以獨立執行零件之更換調校及檢驗能力為主。",D:"合格證B等級:下士及戰士以能配合及協助修理士執行零件之拆裝調校、檢驗及日常維護勤務"}},
-{id:109,q:"因紙條等釋放空氣而洩氣之輪胎應予拆卸檢( )。(4T-1-3)",a:"A",options:{A:"報廢",B:"檢修",C:"送回原廠鑑定",D:"不須檢查"}},
+{id:109,q:"因熱熔塞釋放空氣而洩氣之輪胎應予拆卸後( )。(4T-1-3)",a:"A",options:{A:"報廢",B:"檢修",C:"送回原廠鑑定",D:"不須檢查"}},
 {id:110,q:"在工廠及倉庫內作業，行車速度每小時不得超過幾哩?(空軍修護管理作業手冊 附錄)",a:"C",options:{A:"3",B:"4",C:"5",D:"6"}},
 {id:111,q:"在制定電擊強度標準時，三項決定電擊嚴重性之因素何者為非?(00-25-234第7章)",a:"A",options:{A:"身體穿著衣物的多寡",B:"流過身體電流之大小",C:"電流通過身體之路徑",D:"電流通過身體之時間"}},
 {id:112,q:"在所有安裝中，各螺栓、螺絡或螺釘均應伸出螺帽幾圈以上?(1-1A-8 3.1.1)",a:"A",options:{A:"2圈",B:"4圈",C:"6圈",D:"1圈"}},
@@ -1574,6 +1574,157 @@ function toggleSingleSafetyAns(qid) {
 function toggleAllSafetyAnswers(show) {
   SAFETY_QUESTIONS.forEach(q => safetyRevealed[q.id] = show);
   renderSafetyStudy();
+}
+
+// =========================================================================
+// SAFETY MODE 2: RANDOM QUIZ SIMULATION LOGIC
+// =========================================================================
+function startSafetyQuiz(count) {
+  const shuffled = [...SAFETY_QUESTIONS].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, Math.min(count, SAFETY_QUESTIONS.length));
+
+  safetyQuizState = {
+    active: true,
+    questions: selected,
+    currentIndex: 0,
+    score: 0,
+    userAnswers: {}
+  };
+
+  document.getElementById('safetyQuizSetupCard').classList.add('hidden');
+  document.getElementById('safetyQuizResultPanel').classList.add('hidden');
+  document.getElementById('safetyQuizRunningPanel').classList.remove('hidden');
+
+  renderActiveSafetyQuizQuestion();
+}
+
+function renderActiveSafetyQuizQuestion() {
+  const { questions, currentIndex, score } = safetyQuizState;
+  const current = questions[currentIndex];
+
+  document.getElementById('safetyQuizProgressText').innerText = `第 ${currentIndex + 1} / ${questions.length} 題`;
+  document.getElementById('safetyQuizScoreText').innerText = `${score}`;
+
+  let questionHtml = current.text;
+  current.answers.forEach((ans, idx) => {
+    const inputId = `safety-quiz-input-${currentIndex}-${idx}`;
+    const inputTag = `
+      <input type="text" id="${inputId}" placeholder="輸入【${idx+1}】" autocomplete="off" class="mx-1 px-2.5 py-1 text-xs sm:text-sm rounded-lg border-2 border-brand-400 focus:border-brand-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none w-32 sm:w-36 text-center font-bold">
+    `;
+    questionHtml = questionHtml.replace(`（${ans}）`, `（${inputTag}）`);
+  });
+
+  const card = document.getElementById('safetyQuizQuestionCard');
+  card.innerHTML = `
+    <div class="flex items-center justify-between text-xs text-slate-400">
+      <span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 font-semibold text-slate-600 dark:text-slate-300">原題號：第 ${current.id} 題</span>
+      <span>類別：${current.category}</span>
+    </div>
+
+    <div class="text-sm sm:text-base leading-relaxed text-slate-800 dark:text-slate-100 font-medium">
+      ${questionHtml}
+    </div>
+
+    <div id="safetyQuizFeedbackBox" class="hidden p-3 rounded-xl text-xs sm:text-sm font-medium"></div>
+
+    <div class="pt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-700">
+      <button onclick="revealSafetyQuizAnswer()" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        不會作答？查看解答
+      </button>
+      <div class="flex gap-2">
+        <button id="safetyQuizSubmitBtn" onclick="submitSafetyQuizAnswer()" class="px-4 sm:px-5 py-2 rounded-xl bg-brand-600 text-white text-xs sm:text-sm font-medium hover:bg-brand-700 transition">
+          核對答案
+        </button>
+        <button id="safetyQuizNextBtn" onclick="nextSafetyQuizQuestion()" class="hidden px-4 sm:px-5 py-2 rounded-xl bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 text-xs sm:text-sm font-medium hover:opacity-90 transition">
+          下一題 ➔
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function submitSafetyQuizAnswer() {
+  const { questions, currentIndex } = safetyQuizState;
+  const current = questions[currentIndex];
+  let allCorrect = true;
+
+  current.answers.forEach((ans, idx) => {
+    const input = document.getElementById(`safety-quiz-input-${currentIndex}-${idx}`);
+    const userVal = input ? input.value.trim() : '';
+
+    const isMatch = userVal && (ans.includes(userVal) || userVal.includes(ans) || ans.replace(/\s+/g,'') === userVal.replace(/\s+/g,''));
+    if (input) {
+      if (isMatch) {
+        input.classList.remove('border-brand-400');
+        input.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950');
+      } else {
+        input.classList.remove('border-brand-400');
+        input.classList.add('border-rose-500', 'bg-rose-50', 'dark:bg-rose-950');
+        allCorrect = false;
+      }
+      input.disabled = true;
+    }
+  });
+
+  const fb = document.getElementById('safetyQuizFeedbackBox');
+  fb.classList.remove('hidden');
+
+  if (allCorrect) {
+    safetyQuizState.score++;
+    fb.className = "p-3 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+    fb.innerHTML = `🎉 完全正確！標準答案：【${current.answers.join('】、【')}】`;
+  } else {
+    fb.className = "p-3 rounded-xl text-xs sm:text-sm font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300";
+    fb.innerHTML = `⚠️ 有部分答案不符。標準解答為：<strong class="underline">【${current.answers.join('】、【')}】</strong><br><span class="text-xs font-normal">💡 解析備註：${current.keyNotes}</span>`;
+  }
+
+  document.getElementById('safetyQuizScoreText').innerText = `${safetyQuizState.score}`;
+  document.getElementById('safetyQuizSubmitBtn').classList.add('hidden');
+  document.getElementById('safetyQuizNextBtn').classList.remove('hidden');
+}
+
+function revealSafetyQuizAnswer() {
+  const { questions, currentIndex } = safetyQuizState;
+  const current = questions[currentIndex];
+  current.answers.forEach((ans, idx) => {
+    const input = document.getElementById(`safety-quiz-input-${currentIndex}-${idx}`);
+    if (input) {
+      input.value = ans;
+      input.classList.add('border-amber-500');
+    }
+  });
+  submitSafetyQuizAnswer();
+}
+
+function nextSafetyQuizQuestion() {
+  safetyQuizState.currentIndex++;
+  if (safetyQuizState.currentIndex >= safetyQuizState.questions.length) {
+    finishSafetyQuiz();
+  } else {
+    renderActiveSafetyQuizQuestion();
+  }
+}
+
+function finishSafetyQuiz() {
+  document.getElementById('safetyQuizRunningPanel').classList.add('hidden');
+  const resPanel = document.getElementById('safetyQuizResultPanel');
+  resPanel.classList.remove('hidden');
+
+  const total = safetyQuizState.questions.length;
+  const score = safetyQuizState.score;
+  const rate = Math.round((score / total) * 100);
+
+  document.getElementById('safetyQuizScoreSummary').innerHTML = `
+    您在本次測驗共 <span class="font-bold text-brand-600">${total}</span> 題中，答對了 <span class="font-bold text-emerald-600">${score}</span> 題。<br>
+    正確率：<span class="text-3xl font-extrabold text-brand-600 my-2 inline-block">${rate}%</span>
+  `;
+}
+
+function restartSafetyQuiz() {
+  safetyQuizState.active = false;
+  document.getElementById('safetyQuizResultPanel').classList.add('hidden');
+  document.getElementById('safetyQuizRunningPanel').classList.add('hidden');
+  document.getElementById('safetyQuizSetupCard').classList.remove('hidden');
 }
 
 // Safety QA

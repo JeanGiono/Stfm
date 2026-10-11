@@ -1,1281 +1,1518 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>門窗工程報價與合約書 PDF 轉換工具</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS (XLSX & CSV Parser) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- html2pdf.js for direct PDF Generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
-        
-        body {
-            font-family: 'Noto Sans TC', "Microsoft JhengHei", sans-serif;
-            background-color: #f1f5f9;
-        }
-
-        /* A4 aspect ratio preview in screen mode */
-        .preview-page {
-            background: white;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 20mm 15mm;
-            margin: 0 auto;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            position: relative;
-            box-sizing: border-box;
-        }
-
-        /* Signature Canvas Style */
-        #sig-canvas {
-            cursor: crosshair;
-            touch-action: none;
-        }
-
-        /* Hide elements on system printing */
-        @media print {
-            body {
-                background: white !important;
-                padding: 0 !important;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地面安全題庫與實戰測驗系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef6ff',
+              100: '#d9ebff',
+              500: '#1d63ed',
+              600: '#0047ca',
+              700: '#0037a5',
+              800: '#00287a',
+              900: '#001a53'
             }
-            .no-print {
-                display: none !important;
-            }
-            .preview-page {
-                width: 100% !important;
-                min-height: auto !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                box-shadow: none !important;
-                box-sizing: border-box;
-            }
-            /* Precision print optimization */
-            tr {
-                page-break-inside: avoid !important;
-            }
+          }
         }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    .tab-active {
+      border-bottom: 3px solid #1d63ed;
+      color: #1d63ed;
+      font-weight: 700;
+    }
+    .dark .tab-active {
+      border-bottom-color: #60a5fa;
+      color: #60a5fa;
+    }
+    .badge-highlight {
+      background: linear-gradient(135deg, rgba(29, 99, 237, 0.1) 0%, rgba(14, 165, 233, 0.1) 100%);
+    }
+    .mask-answer {
+      background-color: #f1f5f9;
+      color: #94a3b8;
+      border-radius: 4px;
+      padding: 2px 6px;
+      user-select: none;
+      cursor: pointer;
+      display: inline-block;
+      transition: all 0.2s ease;
+    }
+    .dark .mask-answer {
+      background-color: #334155;
+      color: #64748b;
+    }
+    .mask-revealed {
+      background-color: #dbeafe !important;
+      color: #1e40af !important;
+      font-weight: 600;
+    }
+    .dark .mask-revealed {
+      background-color: #1e3a8a !important;
+      color: #93c5fd !important;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+  </style>
 </head>
-<body class="min-h-screen text-slate-800 flex flex-col">
+<body class="h-full bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
 
-    <!-- Header Control Bar -->
-    <header class="no-print bg-slate-900 text-white shadow-md sticky top-0 z-30 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex items-center gap-3">
-            <div class="bg-indigo-600 p-2 rounded-lg text-white">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-b border-slate-200 dark:border-slate-700 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-black text-lg shadow-md shadow-brand-500/20">
+          地安
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold leading-tight flex items-center gap-2">
+            地面安全題庫與測驗系統
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 font-medium">完整60+6+5全收錄</span>
+          </h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">基地地面失事預防、查處、職安設施規範與處置題庫</p>
+        </div>
+      </div>
+
+      <!-- Action items: Dark toggle and Bookmark count -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <button id="favoriteViewBtn" onclick="filterFavorites()" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/60 text-xs sm:text-sm font-medium transition">
+          <svg class="w-4 h-4 text-amber-500 fill-amber-500" viewBox="0 0 24 24">
+            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+          </svg>
+          <span>收藏重點</span>
+          <span id="favCountBadge" class="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 text-xs px-1.5 py-0.2 rounded-full font-bold">0</span>
+        </button>
+
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="切換深淺模式">
+          <svg id="sunIcon" class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="moonIcon" class="w-5 h-5 block dark:hidden text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mode navigation tabs -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-2 sm:gap-6 overflow-x-auto text-sm">
+      <button onclick="switchTab('study')" id="tabBtn-study" class="tab-btn tab-active py-2.5 px-3 whitespace-nowrap transition">
+        模式一：60題填空循序研讀
+      </button>
+      <button onclick="switchTab('quiz')" id="tabBtn-quiz" class="tab-btn text-slate-600 dark:text-slate-400 py-2.5 px-3 whitespace-nowrap hover:text-brand-600 transition">
+        模式二：隨機測驗模擬
+      </button>
+      <button onclick="switchTab('qa')" id="tabBtn-qa" class="tab-btn text-slate-600 dark:text-slate-400 py-2.5 px-3 whitespace-nowrap hover:text-brand-600 transition">
+        模式三：問答與處置情境題
+      </button>
+      <button onclick="switchTab('search')" id="tabBtn-search" class="tab-btn text-slate-600 dark:text-slate-400 py-2.5 px-3 whitespace-nowrap hover:text-brand-600 transition">
+        模式四：關鍵字全庫檢索
+      </button>
+    </nav>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- TAB 1: STUDY MODE (60 QUESTIONS) -->
+    <section id="panel-study" class="space-y-4">
+      <!-- Toolbar for study mode -->
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-700 dark:text-slate-200">題號跳轉：</span>
+          <select id="jumpSelect" onchange="jumpToQuestion(this.value)" class="text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-brand-500 outline-none">
+            <!-- options will be injected -->
+          </select>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="toggleAllAnswers(true)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-400 hover:bg-brand-100 transition">
+            全部顯示答案
+          </button>
+          <button onclick="toggleAllAnswers(false)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">
+            全部遮蔽答案 (挖空自我測驗)
+          </button>
+          <button onclick="resetFilter()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">
+            重設篩選
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex flex-wrap gap-2 text-xs" id="categoryPillContainer">
+        <!-- populated dynamically -->
+      </div>
+
+      <!-- Cards Grid -->
+      <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Generated Questions will populate here -->
+      </div>
+    </section>
+
+    <!-- TAB 2: MOCK QUIZ MODE -->
+    <section id="panel-quiz" class="hidden space-y-6">
+      <!-- Quiz Setup Panel -->
+      <div id="quizSetupCard" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-center max-w-2xl mx-auto space-y-4">
+        <div class="w-14 h-14 bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 rounded-2xl mx-auto flex items-center justify-center font-bold text-2xl">
+          ✍️
+        </div>
+        <h2 class="text-xl font-bold">地面安全填空模擬測驗</h2>
+        <p class="text-slate-500 dark:text-slate-400 text-sm">
+          系統將從 60 道完整題庫中隨機抽出考題，遮蔽關鍵字進行線上練習。支援即時核對答案與評分機制。
+        </p>
+
+        <div class="flex justify-center gap-4 pt-2">
+          <button onclick="startQuiz(10)" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl shadow-lg shadow-brand-500/25 transition">
+            隨機 10 題速測
+          </button>
+          <button onclick="startQuiz(20)" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg shadow-indigo-500/25 transition">
+            隨機 20 題標準測驗
+          </button>
+          <button onclick="startQuiz(60)" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-xl transition">
+            全庫 60 題大特訓
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz Running Panel -->
+      <div id="quizRunningPanel" class="hidden space-y-4 max-w-3xl mx-auto">
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-sm">
+          <div class="font-bold text-brand-600 dark:text-brand-400" id="quizProgressText">第 1 / 10 題</div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400">目前答對:</span>
+            <span id="quizScoreText" class="font-bold text-emerald-600">0</span>
+          </div>
+        </div>
+
+        <div id="quizQuestionCard" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
+          <!-- Active Quiz Question here -->
+        </div>
+      </div>
+
+      <!-- Quiz Result Modal/Box -->
+      <div id="quizResultPanel" class="hidden bg-white dark:bg-slate-800 p-8 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl max-w-xl mx-auto text-center space-y-4">
+        <div class="text-5xl">🏆</div>
+        <h3 class="text-2xl font-bold">測驗完成！</h3>
+        <p class="text-slate-600 dark:text-slate-300" id="quizScoreSummary">得分載入中...</p>
+        <div id="quizResultAdvice" class="text-sm p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+        </div>
+        <div class="pt-2 flex justify-center gap-3">
+          <button onclick="restartQuiz()" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-700 transition">
+            重新挑戰
+          </button>
+          <button onclick="switchTab('study')" class="px-5 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-medium hover:bg-slate-300 transition">
+            回題庫加強
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: QA & SITUATION MODE -->
+    <section id="panel-qa" class="hidden space-y-8">
+      <!-- Section: 6 Detailed Question & Answer -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-700">
+          <div>
+            <h2 class="text-xl font-bold flex items-center gap-2">
+              <span class="w-2.5 h-6 bg-amber-500 rounded-full inline-block"></span>
+              貳、地安簡答題庫 (共 6 大題)
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">涵蓋傷亡免報標準、不列呈報情事、營內/外失事通知對象、逾期隱瞞處分及地安督導要項。</p>
+          </div>
+          <button onclick="toggleAllQA()" class="text-xs px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 font-semibold border border-amber-200 dark:border-amber-800">
+            全部展開 / 收合
+          </button>
+        </div>
+
+        <div class="space-y-3" id="qaContainer">
+          <!-- 6 QA Cards populated via JS -->
+        </div>
+      </div>
+
+      <!-- Section: 5 Detailed Situation Questions -->
+      <div class="space-y-4 pt-6">
+        <div class="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-700">
+          <div>
+            <h2 class="text-xl font-bold flex items-center gap-2">
+              <span class="w-2.5 h-6 bg-red-500 rounded-full inline-block"></span>
+              參、實境狀況處置題 (共 5 題情境演練)
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">查明事證要項、注意事項、通報回報對象與標準回報處置範本。</p>
+          </div>
+          <button onclick="toggleAllSituations()" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 font-semibold border border-red-200 dark:border-red-800">
+            全部展開 / 收合
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6" id="situationsContainer">
+          <!-- 5 Situations populated via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: SEARCH & NOTES MODE -->
+    <section id="panel-search" class="hidden space-y-4">
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+        <div class="relative">
+          <input type="text" id="globalSearchInput" oninput="executeSearch(this.value)" placeholder="輸入關鍵字（例如：一級事件、滅火器、30分鐘、90分貝、骨折、通報）..." class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+          <svg class="w-5 h-5 absolute left-3 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span id="searchResultsCount">請輸入字串開始搜尋</span>
+          <span>支援跨 60 題填空、6 題問答與 5 題情境</span>
+        </div>
+      </div>
+
+      <div id="searchResultsList" class="space-y-3">
+        <!-- Search hits populate here -->
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // --- 完整題庫資料庫 (共 60 題) ---
+    const rawQuestions = [
+      {
+        id: 1,
+        category: "基本組織與職責",
+        text: "地面安全包括（失事預防）、（營內失事搶搜救）及（失事調查）三項主要工作。",
+        answers: ["失事預防", "營內失事搶搜救", "失事調查"],
+        keyNotes: "地安三大核心工作支柱。"
+      },
+      {
+        id: 2,
+        category: "基本組織與職責",
+        text: "地面安全其主要職責在（預防人員地面失事），工作範圍廣泛而複雜，包括影響安全之一切事務。（失事預防工作項目包含：預防失事計畫、失事預防職責、地安教育、地安督導及地安檢查、外務清除器製作使用）。",
+        answers: ["預防人員地面失事"],
+        keyNotes: "地安首要職責為人員防護。"
+      },
+      {
+        id: 3,
+        category: "計畫與編組",
+        text: "司令部所屬之一級單位，依基地內現況及作業程序，並參照空軍法規、技術命令及有關作戰、訓練、修護、補給、設施及職業安全等法令規章，擬訂基地（地面失事預防計畫）。計畫應涵蓋配屬及相關之單位，以統一管制之效。",
+        answers: ["地面失事預防計畫"],
+        keyNotes: "一級單位依各法令擬訂統一計畫。"
+      },
+      {
+        id: 4,
+        category: "計畫與編組",
+        text: "凡與地面安全作業有（直接）或（間接）關係之一切單位，不論其為（隸屬）或（配屬），均應列為失事預防計畫內編組。",
+        answers: ["直接", "間接", "隸屬", "配屬"],
+        keyNotes: "直間接、隸屬配屬皆納入編組。"
+      },
+      {
+        id: 5,
+        category: "督導與檢查",
+        text: "失事預防乃一連續不斷之工作，各單位按實際需要擬訂計畫付諸實施後，必須予以持續之督導，（地面安全檢查）即為最佳督導方法之一。",
+        answers: ["地面安全檢查"],
+        keyNotes: "最佳督導方法。"
+      },
+      {
+        id: 6,
+        category: "改進建議",
+        text: "在失事發生之前發掘影響安全潛在因素，及時提供在飛機修護、（裝備修維護）、（物流）、（運輸）、（基地勤務）、（設施營產）及地安作業程序上之改進建議，以消除導致失事之可能性。",
+        answers: ["裝備修維護", "物流", "運輸", "基地勤務", "設施營產"],
+        keyNotes: "事前發掘潛在危害與多面向改進。"
+      },
+      {
+        id: 7,
+        category: "地安官權責",
+        text: "各配屬單位主官，須就該單位業務範圍與要求，指定一與專長有關之優秀軍、士官，兼負地安業務；另（基地地安官）應負責督考所屬及配屬單位之地安業務。",
+        answers: ["基地地安官"],
+        keyNotes: "基地地安官統籌督考。"
+      },
+      {
+        id: 8,
+        category: "地安官權責",
+        text: "兼任地安官負責該單位（地面失事預防）工作之推展，如發生（地面失事），須（查明原因）、責任及建議改進辦法等，報告其上級地安業務單位。",
+        answers: ["地面失事預防", "地面失事", "查明原因"],
+        keyNotes: "查明原因、責任與改進辦法。"
+      },
+      {
+        id: 9,
+        category: "地安官權責",
+        text: "凡司令部所屬之一級單位，須管制（中隊）、（獨立分隊）或（同駐營區）內各單位兼任地安官人員並造冊。",
+        answers: ["中隊", "獨立分隊", "同駐營區"],
+        keyNotes: "兼任地安官造冊列管範圍。"
+      },
+      {
+        id: 10,
+        category: "會議制度",
+        text: "地面安全會議為失事預防工作主要部份之一，亦為地安教育方式之一，每季必須召集所屬各單位主官（管）、地安官（兼任地安官）及有關人員舉行（地面安全促進會議）一次。",
+        answers: ["地面安全促進會議"],
+        keyNotes: "每季召開一次。"
+      },
+      {
+        id: 11,
+        category: "督導與檢查",
+        text: "經地面安全檢查發現之缺點，旨在（改正缺失），預防地面失事，促進地面安全，如情況嚴重或改正不力致（缺點重犯）者，得視情況（簽請議處）。",
+        answers: ["改正缺失", "缺點重犯", "簽請議處"],
+        keyNotes: "重犯得視情況簽請議處。"
+      },
+      {
+        id: 12,
+        category: "會議制度",
+        text: "各部隊每季召開地面安全促進會議，可配合（每季督察會報）合併舉行，擴大地安會議紀錄須於會議後（5日）呈主官核閱備查。",
+        answers: ["每季督察會報", "5日"],
+        keyNotes: "時限：會議後5日內呈核。"
+      },
+      {
+        id: 13,
+        category: "督導與檢查",
+        text: "地面安全檢查分類計有地安（業務檢查）、（週期檢查）、（專題檢查）、（特別檢查）及（不定期檢查）等5類。",
+        answers: ["業務檢查", "週期檢查", "專題檢查", "特別檢查", "不定期檢查"],
+        keyNotes: "常考5類檢查劃分。"
+      },
+      {
+        id: 14,
+        category: "文宣宣導",
+        text: "地面失事公報運用分發至（分隊）、（連級）階層提供單位參考改進，並影印揭批後（張貼公布）。",
+        answers: ["分隊", "連級", "張貼公布"],
+        keyNotes: "下發分隊/連級揭批張貼。"
+      },
+      {
+        id: 15,
+        category: "督導與檢查",
+        text: "地安檢查在發掘影響營地地面安全之因素，提出（詳細之分析）、擬訂（改進措施）而付諸實施，並據以修訂與增強失事預防計畫。",
+        answers: ["詳細之分析", "改進措施"],
+        keyNotes: "分析並擬訂改進措施。"
+      },
+      {
+        id: 16,
+        category: "文宣宣導",
+        text: "地安（走廊）及（地安園地）應公布有關安全資料如：交通事故、火災、工作不慎及各種職業災害等重大事件相關資料至少（每季）更新一次，以維新穎。",
+        answers: ["走廊", "地安園地", "每季"],
+        keyNotes: "更新頻率：至少每季一次。"
+      },
+      {
+        id: 17,
+        category: "督導與檢查",
+        text: "地安（督導頻率）（基層單位及中隊）應1日執行1次，（大隊、作戰隊）、組、科、室、中心，2日執行1次，聯隊、指揮部（3日）執行1次。",
+        answers: ["督導頻率", "基層單位及中隊", "大隊、作戰隊", "3日"],
+        keyNotes: "基層/中隊每日；大隊2日；聯隊/指揮部3日。"
+      },
+      {
+        id: 18,
+        category: "督導與檢查",
+        text: "地安週期檢查，應（納編各單位兼任地安官），成立汽、機車檢查小組負責基地內（行車安全）檢查，每月至少1次，各次檢查結果應作完整之紀錄備查。",
+        answers: ["納編各單位兼任地安官", "行車安全"],
+        keyNotes: "汽機車檢查小組：每月至少1次。"
+      },
+      {
+        id: 19,
+        category: "失事調查",
+        text: "地面失事調查工作項目包含（失事之通知）、（組織編組）、（調查之執行）及（調查報告編製）。",
+        answers: ["失事之通知", "組織編組", "調查之執行", "調查報告編製"],
+        keyNotes: "調查工作四大流程項目。"
+      },
+      {
+        id: 20,
+        category: "事件等級劃分",
+        text: "地安事件等級分類計分（一級事件）、（二級事件）、（三級事件）及（四級事件）及（地安通報）。",
+        answers: ["一級事件", "二級事件", "三級事件", "四級事件", "地安通報"],
+        keyNotes: "區分四級事件加地安通報。"
+      },
+      {
+        id: 21,
+        category: "事件等級劃分",
+        text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（死亡3人）（含）以上，或財產毀損金額超過新臺幣1,000萬元（含）以上者，屬於一級事件。",
+        answers: ["死亡3人", "1,000萬元"],
+        keyNotes: "【一級事件】：死亡3人(含)以上 或 財損≥1,000萬元。"
+      },
+      {
+        id: 22,
+        category: "事件等級劃分",
+        text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（死亡2人）（含）以下，或財產毀損金額超過新臺幣600萬元（含）以上，未達新臺幣1,000萬元者，屬於二級事件。",
+        answers: ["死亡2人"],
+        keyNotes: "【二級事件】：死亡2人(含)以下 或 財損600萬～1,000萬元。"
+      },
+      {
+        id: 23,
+        category: "事件等級劃分",
+        text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（一、二等傷殘），或財產毀損金額超過新臺幣360萬元（含）以上，未達新臺幣600萬元者，屬於（三級事件）。",
+        answers: ["一、二等傷殘", "三級事件"],
+        keyNotes: "【三級事件】：一、二等傷殘 或 財損360萬～600萬元。"
+      },
+      {
+        id: 24,
+        category: "事件等級劃分",
+        text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（三等傷殘或重度機能障礙），或財產毀損金額超過新臺幣100萬元（含）以上，未達新臺幣360萬元者，屬於（四級事件）。",
+        answers: ["三等傷殘或重度機能障礙","四級事件"],
+        keyNotes: "【四級事件】：三等傷殘/重度機能障礙 或 財損100萬～360萬元。"
+      },
+      {
+        id: 25,
+        category: "事件等級劃分",
+        text: "地安事件等級分類中，凡因地面失事，造成造成本軍或非本軍人員（受傷或輕度機能障礙）或財產毀損，未達新臺幣100萬元者，屬於（地安通報）。",
+        answers: ["受傷或輕度機能障礙","地安通報"],
+        keyNotes: "【地安通報】：受傷/輕度障礙 或 財損未達100萬元。"
+      },
+      {
+        id: 26,
+        category: "通報時限",
+        text: "地安事件發生，單位獲報後以最迅速方法，地安官或兼任地安官於（營內失事30分鐘）/（營外失事1小時）內通知司令部業務主管單位及司令部督察長室飛行安全組，並於（6小時內）完成初報與飛安服務整合電子系統建置。",
+        answers: ["營內失事30分鐘", "營外失事1小時", "6小時內"],
+        keyNotes: "重要時限：營內30分、營外1小時；6小時完成初報系統建置。"
+      },
+      {
+        id: 27,
+        category: "責任歸屬",
+        text: "調職人員恰於調職期間，尚未向新單位報到時之失事案件，由（原單位）為失事責任單位，若已向新單位報到後發生之失事案件，則（新單位）為失事責任單位。",
+        answers: ["原單位", "新單位"],
+        keyNotes: "報到前原單位負責，報到後新單位負責。"
+      },
+      {
+        id: 28,
+        category: "通報與處分",
+        text: "發生失事如為例假日或非辦公時間，由（部隊地面安全兼管單位值班人員）聯繫司令部督察長室值日官。如逾期呈報地安事件，則失職人員及直屬主管應依權責專案檢討報部。",
+        answers: ["部隊地面安全兼管單位值班人員"],
+        keyNotes: "假日由值班人員聯繫督察長室值日官。"
+      },
+      {
+        id: 29,
+        category: "責任歸屬",
+        text: "發生地安事件時，其失事主因經鑑定係由部隊人員因素導致者，或由環境因素所掌控，或原因不明無法澄清者，所屬單位（失事責任單位）。",
+        answers: ["失事責任單位"],
+        keyNotes: "人員因素、環境因素或原因不明皆由所屬單位負責。"
+      },
+      {
+        id: 30,
+        category: "責任歸屬",
+        text: "發生地安事件時，人員、裝備、車輛及設施其編制在甲單位，而為乙單位借用時，發生地面失事，則（乙單位）為失事責任單位。",
+        answers: ["乙單位"],
+        keyNotes: "借用期間發生失事，借用單位（乙單位）為責任單位。"
+      },
+      {
+        id: 31,
+        category: "地安官權責",
+        text: "失事預防工作之成功，有賴地安官之（能力）與（積極）之工作熱忱，審慎選任與其經常接觸，可使失事預防工作發揮至最高成效。",
+        answers: ["能力", "積極"],
+        keyNotes: "能力與積極熱忱。"
+      },
+      {
+        id: 32,
+        category: "失事調查",
+        text: "如失事事件涉及（故意破壞）時，由（監察人員）執行調查。",
+        answers: ["故意破壞", "監察人員"],
+        keyNotes: "涉及故意破壞由監察部門調查。"
+      },
+      {
+        id: 33,
+        category: "通報時限",
+        text: "地面失事發生後，單位督察科（室）須每（2）日將最新解說電傳司令部（督察長室飛安組），並登錄於（飛安服務整合系統）直至案件（完成續報）。",
+        answers: ["2", "督察長室飛安組", "飛安服務整合系統", "完成續報"],
+        keyNotes: "每2日電傳續報一次。"
+      },
+      {
+        id: 34,
+        category: "失事調查",
+        text: "凡因本軍活動而達致人員傷害或財產毀損（三級含以上）地安事件者，須於45日內調查完畢（如遇特殊情況，例如失事原因須等待檢驗方特能確定者，可請求延期呈報）。",
+        answers: ["三級含以上", "45日"],
+        keyNotes: "三級以上案件須於45日內完成調查。"
+      },
+      {
+        id: 35,
+        category: "責任歸屬",
+        text: "基地地面安全官對同駐營區單位之任何地面失事，須負責（調查）及填寫（地面失事報告），送該屬單位參辦，惟同駐營區單位有現職地面安全官時，則可由同駐營區單位自行辦理。",
+        answers: ["調查", "地面失事報告"],
+        keyNotes: "基地地安官具協同調查與填表權責。"
+      },
+      {
+        id: 36,
+        category: "通報時限",
+        text: "凡因地面失事導致本軍財產受損，無論損傷程度，除依規定時限通報外，失事調查必須迅速審慎，並將受損照片（一式2張）於（1日）內電傳司令部督察長室備查；另失事調查報告表亦需檢附受損照片。",
+        answers: ["一式2張", "1日"],
+        keyNotes: "受損照片一式2張、1日內電傳。"
+      },
+      {
+        id: 37,
+        category: "計畫與編組",
+        text: "各單位應設立（地安指示）及（地面失事案例）檔案，存作參考改進。",
+        answers: ["地安指示", "地面失事案例"],
+        keyNotes: "建立指示與案例專卷存檔。"
+      },
+      {
+        id: 38,
+        category: "現場處置",
+        text: "如遇地面失事，必須儘速趕赴現場，規劃（戒護區域），責適員管制失事現場，繪製（準確失事現場圖），攝取（所需照片），現場未經調查前不可搬離失事殘骸破片，正確紀錄損失情況。",
+        answers: ["戒護區域", "準確失事現場圖", "所需照片"],
+        keyNotes: "現場管制四大要項：戒護、繪圖、拍照、不可搬動殘骸。"
+      },
+      {
+        id: 39,
+        category: "責任歸屬",
+        text: "涉及兩個單位之地面失事調查，部隊防其他基地發生地安事件時，由（原屬基地）負責調查，距離失事現場最近之基地，則應作失事後之各項緊急處置。",
+        answers: ["原屬基地"],
+        keyNotes: "原屬基地主責調查，就近基地作緊急處置。"
+      },
+      {
+        id: 40,
+        category: "責任歸屬",
+        text: "凡地安事件涉及兩個單位且屬不同之基地時，如甲基地移駐至乙基地，如因指揮、通信、裝備、設施等不當而發生失事，應聯合實施失事調查，並由兩基地人員共同召開失事審查會議，由（乙基地）負責召集，會後由（失事責任單位）撰寫失事調查報告。",
+        answers: ["乙基地", "失事責任單位"],
+        keyNotes: "乙基地召集會議，責任單位撰寫報告。"
+      },
+      {
+        id: 42,
+        category: "通報內容",
+        text: "地安事件初報內容應包括（失事發生日期及時間）、發生地點、失事單位、（失事人員職級姓名）、失事當時任務、失事種類、（失事經過）、（初步原因分析）、（失事人員狀況）、裝備或設施損壞情形、已有之處置含憲警及醫療單位處理情形。",
+        answers: ["失事發生日期及時間", "失事人員職級姓名", "失事經過", "初步原因分析", "失事人員狀況"],
+        keyNotes: "初報必備要項，包含人、事、時、地、物及處置。"
+      },
+      {
+        id: 43,
+        category: "地安官權責",
+        text: "地安官應偵察存在於作戰、訓練、（修護、補給）、運輸、通電、（戰、航管）、（基地勤務）、設施、（軍械）、氣象、航醫等各項工作上影響地安之缺點。",
+        answers: ["修護、補給", "戰、航管", "基地勤務", "軍械"],
+        keyNotes: "地安官巡查督考之各業務專業範疇。"
+      },
+      {
+        id: 44,
+        category: "地安官權責",
+        text: "地安官應（分析及歸納）各項缺點，即時建議主官採取（必要改正措施）。",
+        answers: ["分析及歸納", "必要改正措施"],
+        keyNotes: "分析歸納並建議主官改進措施。"
+      },
+      {
+        id: 45,
+        category: "地安官權責",
+        text: "另（兼任地安官）負責該單位地面失事預防工作之推展，如發生地面失事，應（查明原因）、（責任）及（建議改進辦法）等，報告其上級地安業務單位。",
+        answers: ["兼任地安官", "查明原因", "責任", "建議改進辦法"],
+        keyNotes: "兼任地安官事故呈報三核心。"
+      },
+      {
+        id: 46,
+        category: "地安官權責",
+        text: "凡司令部所屬之一級單位，應管制中隊、獨立分隊或相等單位以上（包含同駐營區內各單位）兼任地安官人員並造冊；另（兼任地安官異動）時，須報告其（上級地安業務單位核備）。",
+        answers: ["兼任地安官異動", "上級地安業務單位核備"],
+        keyNotes: "人員異動需向上核備。"
+      },
+      {
+        id: 47,
+        category: "職安法規",
+        text: "依「職業安全衛生設施規則」規定之工作場所安全衛生設備、措施之最低標準，各單位應以此改善所屬不安全之（工作環境）及（個人防護裝備維護）。",
+        answers: ["工作環境", "個人防護裝備維護"],
+        keyNotes: "職安最低標準防護。"
+      },
+      {
+        id: 48,
+        category: "職安法規",
+        text: "各部隊、後勤指揮部及學校於部隊長下轄聯隊部、指揮部、校部應設置（職業安全衛生委員會），由工場安全檢查主管部門負責規劃及推動工場安全檢查業務。",
+        answers: ["職業安全衛生委員會"],
+        keyNotes: "設置職業安全衛生委員會規劃推動。"
+      },
+      {
+        id: 49,
+        category: "失事調查",
+        text: "失事調查之調查官必須儘速趕赴現場，如情況許可下，應（訪談受傷人員）並特別注意受傷人員身體上或精神上之特徵，並根據醫師診斷（記錄其受傷程度）；另亦儘速（會見目擊失事人員），以聽取失事各方面之敘述，由在場目擊人員自由敘述其所見之情況，避免採取官式詢問態度。",
+        answers: ["訪談受傷人員", "記錄其受傷程度", "會見目擊失事人員"],
+        keyNotes: "訪談傷者、記錄傷勢、會見目擊證人。"
+      },
+      {
+        id: 50,
+        category: "工場安全",
+        text: "繪製工作場地安全檢查要領就是防範（危險事故）的發生，藉由安全檢查的方式，來發現不安全之設備或作業行為，加強工作人員的安全意識、喚起工作人員平時注意安全、人人從觀念上重視安全，以達成零災害的理想目標。",
+        answers: ["危險事故"],
+        keyNotes: "安檢目的在防範危險事故、達零災害。"
+      },
+      {
+        id: 51,
+        category: "現場處置",
+        text: "各單位發生工場災害時，應派員調查，非經調查人員許可（不得移動或破壞）現場，不論有無人員傷亡，均應按規定程序處理，必要時應組成專案小組審慎處理之。",
+        answers: ["不得移動或破壞"],
+        keyNotes: "現場保全：非經許可不得移動或破壞。"
+      },
+      {
+        id: 52,
+        category: "消防安檢",
+        text: "滅火器應分別固定放置於取用方便之明顯處所，並以紅色、紅白相間條紋或指標，確實標明其位置，懸掛於牆壁或放置於箱中之滅火器，其上端與地面距離，十八公斤以上者不得超過（1）公尺，十八公斤以下者不得超過（1.5）公尺。",
+        answers: ["1", "1.5"],
+        keyNotes: "重要考點：≥18kg 不得超過1公尺；<18kg 不得超過1.5公尺。"
+      },
+      {
+        id: 53,
+        category: "職安法規",
+        text: "工作場所內為避免工作人員受噪音之危害，各單位應購置耳塞、耳罩等防護裝備，尤其超過（90）分貝者，一律要求工作人員使用噪音防護裝備。",
+        answers: ["90"],
+        keyNotes: "防護裝備臨界門檻：90分貝。"
+      },
+      {
+        id: 54,
+        category: "職安法規",
+        text: "燈盞裝置應採用適合工作性質之燈盞及日光燈為原則，燈泡須完全包於戴於玻璃罩中，易燃、易爆工作地區應使用（防爆燈罩）。",
+        answers: ["防爆燈罩"],
+        keyNotes: "易燃易爆地區嚴格要求防爆燈罩。"
+      },
+      {
+        id: 55,
+        category: "職安法規",
+        text: "高溫刺激物或有毒污染之工作場所，每5人應設置一個冷、熱水之盥洗設備，並應備有適當之（清潔劑），惟不得存放（有機溶劑）供工作人員清潔皮膚。",
+        answers: ["清潔劑", "有機溶劑"],
+        keyNotes: "嚴禁存放有機溶劑供清潔皮膚。"
+      },
+      {
+        id: 56,
+        category: "職安法規",
+        text: "工作場地須特別注意（光線）、（通風）、（溫度）、（濕度）等衛生設備確保人員健康。",
+        answers: ["光線", "通風", "溫度", "濕度"],
+        keyNotes: "衛生四要件：光、風、溫、濕。"
+      },
+      {
+        id: 57,
+        category: "消防安檢",
+        text: "各工作場所之佈置須符合工場安全要求，避免擁擠阻塞，工作場所內通道、樓梯、安全門、安全梯出入口，應設置（緊急照明設備）、（逃生方向指示燈具）等系統，俾利緊急斷電或停電時照明及逃生用。",
+        answers: ["緊急照明設備", "逃生方向指示燈具"],
+        keyNotes: "緊急照明與逃生指標系統。"
+      },
+      {
+        id: 58,
+        category: "督導與檢查",
+        text: "實施地面安全檢查後，受檢單位位於接獲通知，須於（3日內完成改正）工作，如無法於限期內完成時，應將其原因及預定完成日期先行填報。如（無正當理由），（超過改正時限）或是（不改正者），應簽請議處。",
+        answers: ["3日內完成改正", "無正當理由", "超過改正時限", "不改正者"],
+        keyNotes: "檢查缺失須於3日內完成改正。"
+      },
+      {
+        id: 59,
+        category: "失事調查",
+        text: "失事調查應注意（失事殘骸破片）於（未經調查前）不可（搬離現場），凡對肇因有價值者，均具登記其他證據及有關事實，加以正確記錄損失情況，以作研判運用。",
+        answers: ["失事殘骸破片", "未經調查前", "搬離現場"],
+        keyNotes: "調查前殘骸破片不可任意搬移。"
+      }
+    ];
+
+    // --- 完整問答題庫 (共 6 題) ---
+    const rawQA = [
+      {
+        id: 1,
+        title: "單位肇生傷亡案件未達何項標準，得由單位自行管制？",
+        answer: `答：
+1. 因事故就醫經手術治療後，對身體外觀或器官有所改變者（如截肢等）。
+2. 身體外觀或器官經過治療後，雖未改變，但癒後已造成原有功能喪失或障礙者（成殘）。
+3. 經主治醫師診治後開據入院許可證者。
+4. 研判將衍生後遺症（因公受傷等）。
+5. 本軍人員於休假期間（經權責主官奉核之外休假及外宿、傷亡程度為輕度機能障礙以上，酒駕肇事除外）。`,
+        tips: "熟記 5 大自管例外排除標準（截肢改變外觀、功能成殘、開立住院許可、衍生後遺症、奉准休假輕度障礙以上非酒駕者）。"
+      },
+      {
+        id: 2,
+        title: "單位肇生何項情事，不列地面失事呈報（概述6項）？",
+        answer: `答：
+1. 各式武器，已置於發射架上，及其動力裝備起動後，所發生之各種失事。
+2. 因正常磨損或自動折（破）裂所造成之財產損失。
+3. 自裁或謀殺。
+4. 故意自行加害之損傷。
+5. 本軍人員於休假期間，造成民眾傷害及財產損失。
+6. 由飲酒、疾病、藥品、飲食不潔等所引起之疾病，及生理機能傷害。
+7. 醫療單位處方，所引發之藥物過敏性反應。
+8. 由於敵人直接行動所造成之人員傷害及財產損失。
+9. 逮捕或逃獄所造成之傷害。
+10. 已經呈報之人員傷害，痊癒後重新惡化者。
+11. 因颱風、地震、暴風雨及遭動物咬傷等天然災害所造成之人員傷亡或物資損失。`,
+        tips: "考題要求概述6項即可，建議記憶：武器架發射動力啟動、正常磨損折裂、自裁謀殺、休假傷及民眾財產、飲酒疾病食物、天災動物咬傷。"
+      },
+      {
+        id: 3,
+        title: "請述明單位肇生營內失事之通知為何？",
+        answer: `答：立即通知下列單位及人員：
+1. 失事地區之業務主管。
+2. 受傷人員之直屬主官。
+3. 醫療單位。
+4. 憲兵警衛及運輸單位。
+5. 財產保管負責主官。`,
+        tips: "營內失事 5 大通報對象：業務主管、直屬主官、醫療單位、憲警運輸、財產保管主官。"
+      },
+      {
+        id: 4,
+        title: "請述明單位肇生營外失事之通知為何？",
+        answer: `答：地面失事如發生營區外，當事人、地面安全官或兼任地面安全業務人員，立即通知業務主管單位、當地憲警機關及有關單位或人員。`,
+        tips: "營外通報三大主體：業務主管單位、當地憲警機關、有關人員。"
+      },
+      {
+        id: 5,
+        title: "逾期或隱瞞失事事件處置？",
+        answer: `答：各單位對於地面失事案件，如有逾期或隱瞞不報，經司令部（憲、警或其他單位通報）查獲者，有關失職人員及直屬主管應依權責專案檢討報部。`,
+        tips: "關鍵重點：無論逾期或隱匿，經查獲者「失職人員」與「直屬主管」均專案檢討報部。"
+      },
+      {
+        id: 6,
+        title: "請述明地安督導項目（概述6項）？",
+        answer: `答：
+1. 每日地安檢查執行情形。
+2. 有關安全規定執行情形。
+3. 地安教育與宣導執行情形。
+4. 地面失事調查報告處理情形與預防改進措施。
+5. 各項裝備操作是否確按技令及相關規定操作，有無標準作業程序。
+6. 裝備設施、基地勤務與後勤整備執行情形。
+7. 各項在職訓練、專精技訓及組合精進訓練執行情形。
+8. 行車安全規定與檢查執行情形。
+9. 任務提示、勤前教育及安全規定講解與考問。
+10. 人員生活及身心狀況。
+11. 各單位應依特性參考前述各項自行訂定督導項目。`,
+        tips: "常背6項：每日安檢、法規執行、地安教育、技令SOP操作、裝備設施整備、行車安全與勤前教育。"
+      }
+    ];
+
+    // --- 完整實境狀況處置題庫 (共 5 題) ---
+    const rawSituations = [
+      {
+        id: 1,
+        title: "狀況一：營內單車車禍情境",
+        scenario: "現在時間是 0800 時，你擔任（兼任）地安官，0740 時接獲中隊（連）值日官吳大志中尉通知，中隊（連）部王小明一兵在營內駕駛單車發生車禍。",
+        tasks: [
+          "請說明你需要補充查明哪些事證？",
+          "有哪些注意事項？",
+          "現場要通知哪些單位到場？",
+          "你要回報給誰、怎麼回報？"
+        ],
+        solution: `【處置作為與報告範本】
+一、應補充查明事項：
+1. 發生確切地點（路段、轉角、營舍旁）與失事確切時間（精準至分）。
+2. 人員傷勢狀況（有無意識清醒、外傷流血、骨折、已送醫單位處置）。
+3. 事故發生型態（自摔、擦撞行人、與其他汽機車碰撞等）。
+4. 單車機械狀況（煞車是否失靈、有無反光車燈、有無戴安全帽）。
+5. 現場目擊證人證詞與天候路況（道路濕滑、施工凹坑等）。
+
+二、注意事項：
+1. 救人第一：優先確保傷患立即由營區醫務所或撥打 119 送醫。
+2. 保全現場：非經調查官許可，不得任意移動單車及撞擊殘骸破片。
+3. 標記與拍照：迅速繪製現場圖並拍照至少一式2張備查。
+
+三、現場通知單位：
+1. 醫務所（救護車/醫護人員馳援救治）。
+2. 營區憲兵隊/警衛排（實施交通管制與事故勘驗）。
+3. 該員直屬主官及業務主管單位。
+
+四、通報與回報程序：
+1. 營內失事應於「30分鐘內」以電話速報司令部業務主管單位及督察長室飛安組。
+2. 6小時內完成初報作業與登錄「飛安服務整合系統」。
+3. 初報內容：失事時間、地點、單位、王小明一兵姓名、事發經過、初判原因、傷勢病況與已處置作為。`
+      },
+      {
+        id: 2,
+        title: "狀況二：機裝推移骨折情境",
+        scenario: "現在時間是 1100 時，你擔任（兼任）地安官，接獲所屬勤務連（分隊）回報 0930 時，吳安東中士執行發電機裝備推移，推移過程跌倒遭裝備壓傷，人員左小腿骨折。",
+        tasks: [
+          "請說明你需要補充查明哪些事證？",
+          "有哪些注意事項？",
+          "現場要通知哪些單位到場？",
+          "你要回報給誰、怎麼回報？"
+        ],
+        solution: `【處置作為與報告範本】
+一、應補充查明事項：
+1. 發電機裝備重量、型式，以及當時推移人員編組是否符合標準作業程序（SOP要求人數、指揮手）。
+2. 作業場地狀況（地面是否油滑、坡道斜度、障礙物阻礙）。
+3. 個人防護裝備（PPE）著裝情形（安全鞋、手套、反光背心等）。
+4. 吳員送醫醫院、主治醫師開具之骨折診斷書（是否屬重度機能障礙或需開刀住院）。
+5. 是否涉及違規單人推移、機械推桿故障等關鍵主因。
+
+二、注意事項：
+1. 立即固定骨折患部，避免二次傷害，盡速後送國軍醫院就醫。
+2. 暫停該項推移作業，嚴禁移動該發電機裝備及周邊現場。
+3. 骨折案件若經主治醫師開立入院許可證，已達地安呈報標準，不可列為私下自管。
+
+三、現場通知單位：
+1. 基地醫務所/救護車（緊急救護後送）。
+2. 工場安全檢查主管部門（職安小組現場勘驗）。
+3. 單位主官及業務主管。
+
+四、通報與回報程序：
+1. 營內失事 30 分鐘內電話通報司令部主管業務處及督察長室飛安組（本案 0930 發生，1100 獲報已延遲，應立即補報並說明遲報原因，防止遭列隱瞞逾期議處）。
+2. 6 小時內完成系統初報，拍照一式2張於1日內電傳。
+3. 查明是否涉及三級/四級事件等級，由基地地安官介入調查。`
+      },
+      {
+        id: 3,
+        title: "狀況三：休假車禍對撞情境",
+        scenario: "現在時間是凌晨 0200 時，你擔任（兼任）地安官，接獲所屬中隊（連）回報 0110 時，中隊（連）部吳奕致中士，休假期間騎乘機車（車號：AK-8989）行經南投縣市區與民眾汽車（車號：AED-9453）碰撞。",
+        tasks: [
+          "你需要補充查明哪些事證？",
+          "有哪些注意事項？",
+          "你要回報給誰、怎麼回報？"
+        ],
+        solution: `【處置作為與報告範本】
+一、應補充查明事項：
+1. 雙方人員傷亡程度（吳士及對方駕駛/乘客之受傷送醫狀況、意識及急救情形）。
+2. 酒測值（至關重要：確認吳士與對方是否有酒駕違法行為）。
+3. 事故確切路口、路權歸屬（號誌狀態、轉彎/直行、行車記錄器及路口監視器）。
+4. 吳士休假核准情況（是否為奉核之外休/外宿/慰休）、有無無照或越級駕駛。
+5. 處理警局（交通隊警員姓名、分局、案號）。
+
+二、注意事項：
+1. 若涉及酒後駕車，屬於重大違紀失事，絕不得隱匿，將直接列入軍紀地安檢討。
+2. 關懷人員傷勢，指派幹部或輔導長前往醫院協處家屬。
+3. 營外事故應尊重當地交通警察勘驗，記錄初判表，避免現場口角衝突。
+
+三、回報對象與程序：
+1. 營外失事應於「1小時內」以最迅速方式通知司令部業務主管單位及督察長室飛安組。
+2. 假日或深夜非辦公時間，值班人員應聯繫司令部督察長室「值日官」。
+3. 依初報格式於 6 小時內將人、車、時、地、傷勢、酒精濃度、初步責任登錄飛安服務整合系統。`
+      },
+      {
+        id: 4,
+        title: "狀況四：軍車擦撞情境",
+        scenario: "現在時間是 1400 時，你擔任（兼任）地安官，接獲所屬中隊（連）回報 1330 時，中隊（連）部吳吉億中士駕駛軍車（車號：軍C-66123）行經屏東縣萬丹鄉萬丹路二段與大昌路口，與民用大貨車擦撞（雙方無酒駕），人員無傷、軍車輕微掉漆。",
+        tasks: [
+          "請說明你需要補充查明哪些事證？",
+          "有哪些注意事項？",
+          "你要回報給誰、怎麼回報？"
+        ],
+        solution: `【處置作為與報告範本】
+一、應補充查明事項：
+1. 出車派遣事由：派車單、行車路憑、任務性質、有無車長隨車督導。
+2. 行車紀錄器影片、路口號誌及碰撞點（輕微擦痕長度、民車損壞程度與預估賠償金額）。
+3. 雙方酒測單（已確認均為0.00mg/L，須取得警察開具之證明）。
+4. 承辦派出所與承辦警員姓名，交通事故當事人登記聯單編號。
+
+二、注意事項：
+1. 保全現場標線與拍照：在警察未到場繪測前不可擅自駛離，避免肇事逃逸爭議。
+2. 財產損失評估：若財產損失未達100萬元且無人員傷亡，依標準屬「地安通報」等級。
+3. 受損照片一式2張須留存備查。
+
+三、回報對象與回報方式：
+1. 營外失事於「1小時內」通報上級業務主管處與督察長室飛安組。
+2. 於 6 小時內完成初報作業並登錄系統。
+3. 回報內容：車號軍C-66123、駕駛吳吉億中士、1330時、萬丹路口與民用大貨車擦撞、人員無傷、無酒駕、雙方車損極輕、刻由交通警察處理中。`
+      },
+      {
+        id: 5,
+        title: "狀況五：營區草堆失火處置情境",
+        scenario: "現在時間是 1400 時，你擔任（兼任）地安官，接獲所屬中隊（連）回報 1330 時，集合場雜草堆突冒出火花，士官長金價勇士官長帶領幹部及時撲滅火勢，人員及財產均無損，惟所產生之煙霧遭民人拍攝並通知消防隊到場。",
+        tasks: [
+          "請說明你要如何建議幹部處置？",
+          "有哪些注意事項？",
+          "你要回報給誰、怎麼回報？"
+        ],
+        solution: `【處置作為與報告範本】
+一、建議幹部立即處置作為：
+1. 殘火巡查與降溫：雖然火勢撲滅，應立即拉水線徹底澆灌翻動草堆底層，杜絕死灰復燃。
+2. 消防隊對接：營門留引導人員，向趕抵之地方消防隊主動說明火勢已於1330完全撲滅、無人傷亡，並協請消防隊員入內做最終紅外線熱顯像複查確認。
+3. 查明起火源頭：調查是否為亂丟菸蒂、割草機火花、玻璃折射聚焦或電線走火。
+4. 輿情與發言管制：向營區門口拍照民人客氣說明已依SOP撲滅，並回報政戰部門掌握社群媒體爆料輿情。
+
+二、注意事項：
+1. 營區嚴禁私自焚燒雜草或落葉，違者觸犯空污法及軍紀要求。
+2. 滅火器取用後應立即集中更換藥劑填充，並檢視使用型式（乾粉/水劑）。
+3. 避免與拍攝民眾發生衝突，由政戰與警衛人員依權責應處。
+
+三、回報對象與程序：
+1. 營內突發火災事故，30分鐘內以電話速報基地戰情室、主官、督察科及司令部地安業務主管。
+2. 雖然人員無傷、無裝備財損，但因「引來民眾拍攝及地方消防車到場」，極易引發新聞關注，必須以「地安通報」兼「輿情反映」於 6 小時內登錄初報系統。
+3. 回報範例：「報告戰情室/地安科：本部集合場草堆於1330疑因高溫冒火，經士官長金價勇率員即刻撲滅，無人員財損，消防隊到場確認無安全顧慮已離去，後續加強草料清除與菸蒂清查。」`
+      }
+    ];
+
+    // --- 系統應用狀態 ---
+    let appState = {
+      favorites: JSON.parse(localStorage.getItem('gnd_safety_favs') || '[]'),
+      isDark: localStorage.getItem('gnd_safety_dark') === 'true',
+      filterCategory: 'all',
+      onlyFavs: false,
+      revealedAnswers: {}, // id -> bool
+      quizState: {
+        active: false,
+        questions: [],
+        currentIndex: 0,
+        score: 0,
+        userAnswers: {}
+      }
+    };
+
+    // --- 初始載入 ---
+    window.addEventListener('DOMContentLoaded', () => {
+      // 處理系統主題
+      if (appState.isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      updateThemeIcons();
+
+      // 初始化分類標籤與跳題選單
+      initCategories();
+      populateJumpSelect();
+
+      // 渲染題目
+      renderStudyQuestions();
+      renderQASection();
+      renderSituationsSection();
+      updateFavBadge();
+    });
+
+    // --- 主題切換 ---
+    function toggleTheme() {
+      appState.isDark = !appState.isDark;
+      localStorage.setItem('gnd_safety_dark', appState.isDark);
+      if (appState.isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      updateThemeIcons();
+    }
+
+    function updateThemeIcons() {
+      const sun = document.getElementById('sunIcon');
+      const moon = document.getElementById('moonIcon');
+      if (appState.isDark) {
+        sun.classList.remove('hidden');
+        moon.classList.add('hidden');
+      } else {
+        sun.classList.add('hidden');
+        moon.classList.remove('hidden');
+      }
+    }
+
+    // --- 頁籤切換 ---
+    function switchTab(tabKey) {
+      const tabs = ['study', 'quiz', 'qa', 'search'];
+      tabs.forEach(k => {
+        document.getElementById(`panel-${k}`).classList.add('hidden');
+        const btn = document.getElementById(`tabBtn-${k}`);
+        btn.classList.remove('tab-active');
+        btn.classList.add('text-slate-600', 'dark:text-slate-400');
+      });
+
+      document.getElementById(`panel-${tabKey}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tabBtn-${tabKey}`);
+      activeBtn.classList.add('tab-active');
+      activeBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+      if (tabKey === 'study') {
+        renderStudyQuestions();
+      }
+    }
+
+    // --- 收藏功能 ---
+    function toggleFavorite(id, e) {
+      if (e) e.stopPropagation();
+      const idx = appState.favorites.indexOf(id);
+      if (idx > -1) {
+        appState.favorites.splice(idx, 1);
+      } else {
+        appState.favorites.push(id);
+      }
+      localStorage.setItem('gnd_safety_favs', JSON.stringify(appState.favorites));
+      updateFavBadge();
+      renderStudyQuestions();
+    }
+
+    function updateFavBadge() {
+      document.getElementById('favCountBadge').innerText = appState.favorites.length;
+    }
+
+    function filterFavorites() {
+      appState.onlyFavs = !appState.onlyFavs;
+      const btn = document.getElementById('favoriteViewBtn');
+      if (appState.onlyFavs) {
+        btn.classList.add('ring-2', 'ring-amber-500', 'bg-amber-50', 'dark:bg-amber-950');
+      } else {
+        btn.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-50', 'dark:bg-amber-950');
+      }
+      switchTab('study');
+      renderStudyQuestions();
+    }
+
+    function resetFilter() {
+      appState.onlyFavs = false;
+      appState.filterCategory = 'all';
+      const btn = document.getElementById('favoriteViewBtn');
+      btn.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-50', 'dark:bg-amber-950');
+      document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('bg-brand-600', 'text-white'));
+      const allPill = document.getElementById('cat-pill-all');
+      if (allPill) allPill.classList.add('bg-brand-600', 'text-white');
+      renderStudyQuestions();
+    }
+
+    // --- 初始化篩選膠囊 ---
+    function initCategories() {
+      const cats = Array.from(new Set(rawQuestions.map(q => q.category)));
+      const container = document.getElementById('categoryPillContainer');
+      container.innerHTML = `
+        <button id="cat-pill-all" onclick="selectCategory('all')" class="cat-pill px-3 py-1.5 rounded-full font-medium transition bg-brand-600 text-white shadow-sm">
+          全部 (${rawQuestions.length})
+        </button>
+      `;
+
+      cats.forEach(c => {
+        const count = rawQuestions.filter(q => q.category === c).length;
+        const btn = document.createElement('button');
+        btn.className = `cat-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-300`;
+        btn.innerText = `${c} (${count})`;
+        btn.onclick = () => selectCategory(c, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectCategory(cat, targetBtn) {
+      appState.filterCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.classList.remove('bg-brand-600', 'text-white');
+        btn.classList.add('bg-slate-200', 'text-slate-700', 'dark:bg-slate-700', 'dark:text-slate-300');
+      });
+
+      if (cat === 'all') {
+        document.getElementById('cat-pill-all').classList.add('bg-brand-600', 'text-white');
+      } else if (targetBtn) {
+        targetBtn.classList.remove('bg-slate-200', 'text-slate-700', 'dark:bg-slate-700', 'dark:text-slate-300');
+        targetBtn.classList.add('bg-brand-600', 'text-white');
+      }
+      renderStudyQuestions();
+    }
+
+    function populateJumpSelect() {
+      const sel = document.getElementById('jumpSelect');
+      sel.innerHTML = rawQuestions.map(q => `<option value="${q.id}">第 ${q.id} 題 - ${q.category}</option>`).join('');
+    }
+
+    function jumpToQuestion(qid) {
+      const el = document.getElementById(`q-card-${qid}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-brand-500');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-brand-500'), 1600);
+      }
+    }
+
+    // --- STREAMING_CHUNK:Rendering Study Mode Cards ---
+    function renderStudyQuestions() {
+      const container = document.getElementById('questionsContainer');
+      let filtered = rawQuestions.filter(q => {
+        if (appState.filterCategory !== 'all' && q.category !== appState.filterCategory) return false;
+        if (appState.onlyFavs && !appState.favorites.includes(q.id)) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-2 text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <p class="text-slate-400 text-base">查無符合條件的題目。</p>
+            <button onclick="resetFilter()" class="mt-3 px-4 py-2 text-sm bg-brand-600 text-white rounded-lg">清除篩選條件</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(q => {
+        const isFav = appState.favorites.includes(q.id);
+        const isRevealed = !!appState.revealedAnswers[q.id];
+
+        // 格式化挖空題目文字
+        let formattedText = q.text;
+        q.answers.forEach(ans => {
+          const maskedSpan = `<span onclick="toggleSingleAnswer(${q.id}, this)" class="mask-answer ${isRevealed ? 'mask-revealed' : ''}">${isRevealed ? ans : '【 點擊揭曉 】'}</span>`;
+          // 替換括號內文本
+          formattedText = formattedText.split(`（${ans}）`).join(`（${maskedSpan}）`);
+        });
+
+        return `
+          <div id="q-card-${q.id}" class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/90 dark:border-slate-700/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-300">
+                    第 ${q.id} 題
+                  </span>
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-300">
+                    ${q.category}
+                  </span>
+                </div>
+
+                <button onclick="toggleFavorite(${q.id}, event)" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="收藏標記">
+                  <svg class="w-5 h-5 ${isFav ? 'text-amber-500 fill-amber-500' : 'fill-none stroke-current'}" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- 題幹主體 -->
+              <p class="text-sm sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 font-medium">
+                ${formattedText}
+              </p>
             </div>
+
+            <!-- 解析與答案切換列 -->
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs">
+              <div class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <span class="font-bold text-slate-600 dark:text-slate-300">💡 重點備註:</span>
+                <span>${q.keyNotes}</span>
+              </div>
+              <button onclick="toggleCardAnswer(${q.id})" class="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold hover:bg-slate-200">
+                ${isRevealed ? '隱藏' : '顯示答案'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleCardAnswer(qid) {
+      appState.revealedAnswers[qid] = !appState.revealedAnswers[qid];
+      renderStudyQuestions();
+    }
+
+    function toggleSingleAnswer(qid, element) {
+      // 點選個別遮罩單獨顯示
+      element.classList.toggle('mask-revealed');
+      const q = rawQuestions.find(i => i.id === qid);
+      if (element.classList.contains('mask-revealed')) {
+        // 尋找其對應字串
+        const idx = Array.from(element.parentNode.querySelectorAll('.mask-answer')).indexOf(element);
+        if (q && q.answers[idx]) {
+          element.innerText = q.answers[idx];
+        }
+      } else {
+        element.innerText = '【 點擊揭曉 】';
+      }
+    }
+
+    function toggleAllAnswers(show) {
+      rawQuestions.forEach(q => {
+        appState.revealedAnswers[q.id] = show;
+      });
+      renderStudyQuestions();
+    }
+
+    // --- STREAMING_CHUNK:Rendering QA & Situation Sections ---
+    function renderQASection() {
+      const container = document.getElementById('qaContainer');
+      container.innerHTML = rawQA.map(item => `
+        <div class="qa-item bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+          <button onclick="toggleAccordion('qa-ans-${item.id}', this)" class="w-full p-4 sm:p-5 text-left flex items-start justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/40 transition">
+            <div class="flex items-start gap-3">
+              <span class="flex-shrink-0 w-7 h-7 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 font-bold flex items-center justify-center text-sm">
+                ${item.id}
+              </span>
+              <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 pt-0.5">
+                ${item.title}
+              </h3>
+            </div>
+            <svg class="chevron-icon w-5 h-5 text-slate-400 flex-shrink-0 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <div id="qa-ans-${item.id}" class="hidden p-5 pt-1 border-t border-slate-100 dark:border-slate-700/60 space-y-3 bg-slate-50/50 dark:bg-slate-900/40">
+            <pre class="font-sans text-sm leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-line">${item.answer}</pre>
+            <div class="text-xs p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 font-medium">
+              💡 記憶口訣／解題關鍵：${item.tips}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderSituationsSection() {
+      const container = document.getElementById('situationsContainer');
+      container.innerHTML = rawSituations.map(sit => `
+        <div class="situation-item bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-100 dark:border-slate-700/80 bg-gradient-to-r from-red-500/10 via-transparent to-transparent flex items-start justify-between">
             <div>
-                <h1 class="text-xl font-bold tracking-tight">工程合約報價單 PDF 轉換器</h1>
-                <p class="text-xs text-slate-400">專為門窗、裝潢工程合約開發的智慧型解析工具</p>
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">實境演練 ${sit.id}</span>
+              <h3 class="text-lg font-bold text-slate-800 dark:text-white mt-1">${sit.title}</h3>
             </div>
+            <button onclick="toggleAccordion('sit-content-${sit.id}', this)" class="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-semibold transition">
+              展開完整範本
+            </button>
+          </div>
+
+          <div class="p-5 space-y-4 text-sm">
+            <div class="p-3.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300 leading-relaxed">
+              <span class="font-bold text-slate-900 dark:text-slate-100">📌 題目情境背景：</span><br>
+              ${sit.scenario}
+            </div>
+
+            <div>
+              <div class="font-bold text-slate-800 dark:text-slate-200 mb-2">📋 答題任務清單：</div>
+              <ul class="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-300 pl-1">
+                ${sit.tasks.map(t => `<li>${t}</li>`).join('')}
+              </ul>
+            </div>
+
+            <!-- 可折疊之官方標準處置作為 -->
+            <div id="sit-content-${sit.id}" class="hidden space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+              <div class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                地面安全官標準處置要項與通報回報範例：
+              </div>
+              <pre class="font-sans text-xs sm:text-sm bg-slate-100 dark:bg-slate-900/90 p-4 rounded-xl text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed border border-slate-200 dark:border-slate-700">${sit.solution}</pre>
+            </div>
+          </div>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-            <button onclick="loadSampleData()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 transition-colors rounded text-xs font-semibold">
-                載入張先生範例資料
-            </button>
-            <button onclick="triggerBrowserPrint()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg shadow text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                瀏覽器列印/存PDF
-            </button>
-            <button onclick="exportDirectPDF()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg shadow text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                一鍵匯出 PDF 檔案
-            </button>
+      `).join('');
+    }
+
+    function toggleAccordion(id, btn) {
+      const panel = document.getElementById(id);
+      const isHidden = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden');
+      const icon = btn.querySelector('.chevron-icon');
+      if (icon) {
+        icon.classList.toggle('rotate-180', isHidden);
+      }
+    }
+
+    function toggleAllQA() {
+      rawQA.forEach(item => {
+        const el = document.getElementById(`qa-ans-${item.id}`);
+        if (el) el.classList.toggle('hidden');
+      });
+    }
+
+    function toggleAllSituations() {
+      rawSituations.forEach(sit => {
+        const el = document.getElementById(`sit-content-${sit.id}`);
+        if (el) el.classList.toggle('hidden');
+      });
+    }
+
+    // --- STREAMING_CHUNK:Implementing Quiz System Logic ---
+    function startQuiz(count) {
+      const shuffled = [...rawQuestions].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, Math.min(count, rawQuestions.length));
+
+      appState.quizState = {
+        active: true,
+        questions: selected,
+        currentIndex: 0,
+        score: 0,
+        userAnswers: {}
+      };
+
+      document.getElementById('quizSetupCard').classList.add('hidden');
+      document.getElementById('quizResultPanel').classList.add('hidden');
+      document.getElementById('quizRunningPanel').classList.remove('hidden');
+
+      renderActiveQuizQuestion();
+    }
+
+    function renderActiveQuizQuestion() {
+      const { questions, currentIndex, score } = appState.quizState;
+      const current = questions[currentIndex];
+
+      document.getElementById('quizProgressText').innerText = `第 ${currentIndex + 1} / ${questions.length} 題`;
+      document.getElementById('quizScoreText').innerText = `${score} 題答對`;
+
+      // 替換填空欄位為可輸入框
+      let questionHtml = current.text;
+      current.answers.forEach((ans, idx) => {
+        const inputId = `quiz-input-${currentIndex}-${idx}`;
+        const inputTag = `
+          <input type="text" id="${inputId}" placeholder="輸入【${idx+1}】" autocomplete="off" class="mx-1 px-2.5 py-1 text-sm rounded-lg border-2 border-brand-400 focus:border-brand-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none w-36 text-center font-bold">
+        `;
+        questionHtml = questionHtml.replace(`（${ans}）`, `（${inputTag}）`);
+      });
+
+      const card = document.getElementById('quizQuestionCard');
+      card.innerHTML = `
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 font-semibold text-slate-600 dark:text-slate-300">原題號：第 ${current.id} 題</span>
+          <span>類別：${current.category}</span>
         </div>
-    </header>
 
-    <!-- Main Workspace -->
-    <main class="flex-1 flex flex-col lg:flex-row gap-6 p-4 md:p-6">
-        
-        <!-- Left Column: Importer & Form Editor (No Print) -->
-        <section class="no-print w-full lg:w-[45%] flex flex-col gap-6">
-            
-            <!-- File Drag and Drop Importer -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-md font-bold mb-3 text-slate-800 flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 bg-indigo-500 rounded-full"></span> 
-                    1. 匯入合約報價檔案 (.xlsx / .csv)
-                </h2>
-                <div id="drop-zone" class="border-2 border-dashed border-indigo-200 hover:border-indigo-500 bg-indigo-50/50 hover:bg-indigo-50 rounded-xl p-8 text-center transition-all cursor-pointer relative">
-                    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                    <svg class="w-12 h-12 text-indigo-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-                    </svg>
-                    <p class="text-sm font-semibold text-slate-700">拖曳 Excel 或 CSV 檔案至此處，或點此選擇檔案</p>
-                    <p class="text-xs text-slate-400 mt-1">系統將自動分析並帶入所有報價欄位與工程規格</p>
-                </div>
-                <div id="file-status" class="hidden mt-3 p-3 bg-emerald-50 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
-                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span id="file-status-text">已成功讀取檔案</span>
-                </div>
+        <div class="text-base sm:text-lg leading-relaxed text-slate-800 dark:text-slate-100">
+          ${questionHtml}
+        </div>
+
+        <div id="quizFeedbackBox" class="hidden p-3 rounded-xl text-sm font-medium"></div>
+
+        <div class="pt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-700">
+          <button onclick="revealQuizAnswer()" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            不會作答？查看解答
+          </button>
+          <div class="flex gap-2">
+            <button id="quizSubmitBtn" onclick="submitCurrentQuizAnswer()" class="px-5 py-2 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-700 transition">
+              核對答案
+            </button>
+            <button id="quizNextBtn" onclick="nextQuizQuestion()" class="hidden px-5 py-2 rounded-xl bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 font-medium hover:opacity-90 transition">
+              下一題 ➔
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function submitCurrentQuizAnswer() {
+      const { questions, currentIndex } = appState.quizState;
+      const current = questions[currentIndex];
+      let allCorrect = true;
+      let userList = [];
+
+      current.answers.forEach((ans, idx) => {
+        const input = document.getElementById(`quiz-input-${currentIndex}-${idx}`);
+        const userVal = input ? input.value.trim() : '';
+        userList.push(userVal);
+
+        // 寬鬆關鍵字比對
+        const isMatch = userVal && (ans.includes(userVal) || userVal.includes(ans) || ans.replace(/\s+/g,'') === userVal.replace(/\s+/g,''));
+        if (input) {
+          if (isMatch) {
+            input.classList.remove('border-brand-400');
+            input.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950');
+          } else {
+            input.classList.remove('border-brand-400');
+            input.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-950');
+            allCorrect = false;
+          }
+          input.disabled = true;
+        }
+      });
+
+      const fb = document.getElementById('quizFeedbackBox');
+      fb.classList.remove('hidden');
+
+      if (allCorrect) {
+        appState.quizState.score++;
+        fb.className = "p-3 rounded-xl text-sm font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+        fb.innerHTML = `🎉 完全正確！標準答案：【${current.answers.join('】、【')}】`;
+      } else {
+        fb.className = "p-3 rounded-xl text-sm font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300";
+        fb.innerHTML = `⚠️ 有部分答案不符。標準解答為：<strong class="underline">【${current.answers.join('】、【')}】</strong><br><span class="text-xs font-normal">💡 解析備註：${current.keyNotes}</span>`;
+      }
+
+      document.getElementById('quizScoreText').innerText = `${appState.quizState.score} 題答對`;
+      document.getElementById('quizSubmitBtn').classList.add('hidden');
+      document.getElementById('quizNextBtn').classList.remove('hidden');
+    }
+
+    function revealQuizAnswer() {
+      const { questions, currentIndex } = appState.quizState;
+      const current = questions[currentIndex];
+      current.answers.forEach((ans, idx) => {
+        const input = document.getElementById(`quiz-input-${currentIndex}-${idx}`);
+        if (input) {
+          input.value = ans;
+          input.classList.add('border-amber-500');
+        }
+      });
+      submitCurrentQuizAnswer();
+    }
+
+    function nextQuizQuestion() {
+      appState.quizState.currentIndex++;
+      if (appState.quizState.currentIndex >= appState.quizState.questions.length) {
+        finishQuiz();
+      } else {
+        renderActiveQuizQuestion();
+      }
+    }
+
+    function finishQuiz() {
+      document.getElementById('quizRunningPanel').classList.add('hidden');
+      const resPanel = document.getElementById('quizResultPanel');
+      resPanel.classList.remove('hidden');
+
+      const total = appState.quizState.questions.length;
+      const score = appState.quizState.score;
+      const rate = Math.round((score / total) * 100);
+
+      document.getElementById('quizScoreSummary').innerHTML = `
+        您在本次共 <span class="font-bold text-brand-600">${total}</span> 題中，答對了 <span class="font-bold text-emerald-600">${score}</span> 題。<br>
+        正確率：<span class="text-3xl font-extrabold text-brand-600">${rate}%</span>
+      `;
+
+      let advice = "";
+      if (rate >= 90) {
+        advice = "🎖️ 太卓越了！您對地面安全各項法規、失事通報時限與職安規定已瞭若指掌，具備高度專業地安官水準！";
+      } else if (rate >= 70) {
+        advice = "👍 表現不錯！核心流程大致掌握，建議加強失事等級金額、滅火器高度及通報時效細節。";
+      } else {
+        advice = "📚 仍需努力！建議切換至「模式一：循序研讀」，利用隱藏答案進行自我遮蔽覆誦，把關鍵字深植腦海！";
+      }
+      document.getElementById('quizResultAdvice').innerText = advice;
+    }
+
+    function restartQuiz() {
+      document.getElementById('quizResultPanel').classList.add('hidden');
+      document.getElementById('quizSetupCard').classList.remove('hidden');
+    }
+
+    // --- STREAMING_CHUNK:Global Search Implementation ---
+    function executeSearch(keyword) {
+      keyword = keyword.trim().toLowerCase();
+      const countEl = document.getElementById('searchResultsCount');
+      const listEl = document.getElementById('searchResultsList');
+
+      if (!keyword) {
+        countEl.innerText = "請輸入字串開始搜尋";
+        listEl.innerHTML = "";
+        return;
+      }
+
+      let matches = [];
+
+      // 搜尋 60 題
+      rawQuestions.forEach(q => {
+        if (q.text.toLowerCase().includes(keyword) || q.keyNotes.toLowerCase().includes(keyword) || q.category.toLowerCase().includes(keyword)) {
+          matches.push({ type: '填空題', id: q.id, title: `第 ${q.id} 題 [${q.category}]`, content: q.text, note: q.keyNotes });
+        }
+      });
+
+      // 搜尋 6 題問答
+      rawQA.forEach(qa => {
+        if (qa.title.toLowerCase().includes(keyword) || qa.answer.toLowerCase().includes(keyword)) {
+          matches.push({ type: '問答題', id: qa.id, title: `問答題第 ${qa.id} 題：${qa.title}`, content: qa.answer, note: qa.tips });
+        }
+      });
+
+      // 搜尋 5 題情境
+      rawSituations.forEach(sit => {
+        if (sit.title.toLowerCase().includes(keyword) || sit.scenario.toLowerCase().includes(keyword) || sit.solution.toLowerCase().includes(keyword)) {
+          matches.push({ type: '實境題', id: sit.id, title: `實境題 ${sit.id}：${sit.title}`, content: sit.scenario + "\n" + sit.solution, note: "實境處置標準SOP" });
+        }
+      });
+
+      countEl.innerText = `搜尋「${keyword}」，共找到 ${matches.length} 筆相符內容`;
+
+      if (matches.length === 0) {
+        listEl.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-800 rounded-xl">找不到與「${keyword}」相符的題目或處置要點。</div>`;
+        return;
+      }
+
+      listEl.innerHTML = matches.map(m => {
+        // 高亮關鍵字
+        const highlightedTitle = m.title.replace(new RegExp(keyword, 'gi'), match => `<mark class="bg-amber-200 dark:bg-amber-800 text-slate-900 dark:text-white px-1 rounded">${match}</mark>`);
+        const highlightedContent = m.content.replace(new RegExp(keyword, 'gi'), match => `<mark class="bg-yellow-200 dark:bg-yellow-800 text-slate-900 dark:text-white px-1 rounded">${match}</mark>`);
+
+        let badgeColor = "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
+        if (m.type === '問答題') badgeColor = "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
+        if (m.type === '實境題') badgeColor = "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300";
+
+        return `
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2 py-0.5 rounded-full font-bold ${badgeColor}">${m.type}</span>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${highlightedTitle}</h4>
             </div>
-
-            <!-- Form Live Editor Tabs -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col min-h-[500px]">
-                <!-- Tab Headers -->
-                <div class="flex border-b border-slate-200 bg-slate-50 rounded-t-xl">
-                    <button onclick="switchTab('basic')" id="tab-btn-basic" class="flex-1 py-3 px-4 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-600 transition-all">基本合約資料</button>
-                    <button onclick="switchTab('items')" id="tab-btn-items" class="flex-1 py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all">工程項目明細</button>
-                    <button onclick="switchTab('details')" id="tab-btn-details" class="flex-1 py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all">工程/尺寸備註</button>
-                    <button onclick="switchTab('style')" id="tab-btn-style" class="flex-1 py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all">排版設定</button>
-                </div>
-
-                <!-- Tab Content Box -->
-                <div class="p-6 flex-1 overflow-y-auto max-h-[600px]">
-                    
-                    <!-- TAB 1: Basic Info -->
-                    <div id="tab-content-basic" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">合約標題</label>
-                            <input type="text" id="edit-title" oninput="updateField('title', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">購買人 (客戶姓名)</label>
-                                <input type="text" id="edit-buyer" oninput="updateField('buyer', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">身分證字號</label>
-                                <input type="text" id="edit-buyerId" oninput="updateField('buyerId', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">聯絡電話</label>
-                                <input type="text" id="edit-buyerPhone" oninput="updateField('buyerPhone', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">報價日期</label>
-                                <input type="text" id="edit-date" oninput="updateField('date', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">工地地址</label>
-                            <input type="text" id="edit-siteAddress" oninput="updateField('siteAddress', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                        </div>
-                        <div class="border-t border-slate-100 pt-4 mt-2">
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">賣方 (本公司資訊)</h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 mb-1">公司名稱</label>
-                                    <input type="text" id="edit-sellerCompany" oninput="updateField('sellerCompany', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 mb-1">業務代表</label>
-                                    <input type="text" id="edit-salesperson" oninput="updateField('salesperson', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 mt-2">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 mb-1">公司電話</label>
-                                    <input type="text" id="edit-sellerPhone" oninput="updateField('sellerPhone', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 mb-1">傳真號碼</label>
-                                    <input type="text" id="edit-sellerFax" oninput="updateField('sellerFax', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <label class="block text-xs font-bold text-slate-500 mb-1">公司地址</label>
-                                <input type="text" id="edit-sellerAddress" oninput="updateField('sellerAddress', this.value)" class="w-full border border-slate-200 rounded px-3 py-2 text-sm">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TAB 2: Items Details -->
-                    <div id="tab-content-items" class="hidden space-y-4">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold text-slate-400">產品與施工細項明細</span>
-                            <button onclick="addNewRow()" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded text-xs font-semibold flex items-center gap-1">
-                                ＋ 新增細項
-                            </button>
-                        </div>
-                        <div id="edit-items-container" class="space-y-4">
-                            <!-- Rows dynamically populated here -->
-                        </div>
-                    </div>
-
-                    <!-- TAB 3: Site & Installation Details -->
-                    <div id="tab-content-details" class="hidden space-y-4">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">現場尺寸與規格</h3>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">門洞最大</label>
-                                <input type="text" id="edit-doorMax" oninput="updateSpec('doorMax', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">門洞最小</label>
-                                <input type="text" id="edit-doorMin" oninput="updateSpec('doorMin', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">大門尺寸</label>
-                                <input type="text" id="edit-doorSize" oninput="updateSpec('doorSize', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">開向備註</label>
-                            <input type="text" id="edit-doorOpen" oninput="updateSpec('doorOpen', this.value)" placeholder="例：孔塞19mm, 靠外側置中" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
-                        </div>
-
-                        <div class="border-t border-slate-100 pt-4 mt-2">
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">施工與搬運條件 (Checkboxes)</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 text-xs text-slate-600">
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-shipping" onchange="updateCheckSpec('shipping', this.checked)"> 前天出貨
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-cementGate" onchange="updateCheckSpec('cementGate', this.checked)"> 客戶留水泥灌門檻
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-floor1" onchange="updateCheckSpec('floor1', this.checked)"> 一樓可放置
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-isBuilding" onchange="updateCheckSpec('isBuilding', this.checked)"> 大樓
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-isApartment" onchange="updateCheckSpec('isApartment', this.checked)"> 公寓
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-noDoor" onchange="updateCheckSpec('noDoor', this.checked)"> 無門
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-hasDoorMorning" onchange="updateCheckSpec('hasDoorMorning', this.checked)"> 有門客戶上午拆除
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-tempDoor" onchange="updateCheckSpec('tempDoor', this.checked)"> 臨時門
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-elevator" onchange="updateCheckSpec('elevator', this.checked)"> 有電梯
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-frameCarry" onchange="updateCheckSpec('frameCarry', this.checked)"> 框搬
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-fanCarry" onchange="updateCheckSpec('fanCarry', this.checked)"> 扇搬
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-crane" onchange="updateCheckSpec('crane', this.checked)"> 吊車
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-woodboard" onchange="updateCheckSpec('woodboard', this.checked)"> 木板
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-wallTrim" onchange="updateCheckSpec('wallTrim', this.checked)"> 修牆
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-designer" onchange="updateCheckSpec('designer', this.checked)"> 設計師
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chk-onlyChangeDoor" onchange="updateCheckSpec('onlyChangeDoor', this.checked)"> 只有換門
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4 mt-3">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">丈量人員</label>
-                                <input type="text" id="edit-measuringStaff" oninput="updateSpec('measuringStaff', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">安裝人員</label>
-                                <input type="text" id="edit-installStaff" oninput="updateSpec('installStaff', this.value)" class="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm">
-                            </div>
-                        </div>
-
-                        <div class="border-t border-slate-100 pt-4 mt-2">
-                            <label class="block text-xs font-bold text-slate-500 mb-1">合約備註及除外條款細則</label>
-                            <textarea id="edit-extraNotes" oninput="updateField('extraNotes', this.value)" rows="5" class="w-full border border-slate-200 rounded p-3 text-xs leading-relaxed"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- TAB 4: Layout and Formatting -->
-                    <div id="tab-content-style" class="hidden space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">報價單風格配色</label>
-                            <div class="grid grid-cols-3 gap-3">
-                                <button onclick="setTheme('navy')" class="border-2 border-indigo-600 bg-white p-2 rounded text-xs font-bold text-slate-700 hover:bg-slate-50">高雅海軍藍</button>
-                                <button onclick="setTheme('charcoal')" class="border bg-white p-2 rounded text-xs font-bold text-slate-700 hover:bg-slate-50">精鍊墨黑灰</button>
-                                <button onclick="setTheme('forest')" class="border bg-white p-2 rounded text-xs font-bold text-slate-700 hover:bg-slate-50">環保森林綠</button>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">版面緊湊度 (調整表格高寬度以符合單張 A4)</label>
-                            <select id="edit-density" onchange="setDensity(this.value)" class="w-full border border-slate-200 rounded p-2 text-sm bg-white">
-                                <option value="tight">精簡（適用項目多、合約條款長）</option>
-                                <option value="normal" selected>標準（推薦最優美觀感）</option>
-                                <option value="loose">寬鬆（項目少時加大行高）</option>
-                            </select>
-                        </div>
-                        <div class="border-t border-slate-100 pt-4">
-                            <label class="block text-xs font-bold text-slate-500 mb-2">現場行動客戶快速手寫簽名</label>
-                            <div class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
-                                <canvas id="sig-canvas" width="300" height="120" class="w-full bg-white block"></canvas>
-                                <div class="p-2 border-t border-slate-200 bg-slate-100 flex justify-between">
-                                    <button onclick="clearSignature()" class="px-2.5 py-1 text-xs text-slate-500 hover:text-red-500 font-semibold transition-colors">清除簽名</button>
-                                    <button onclick="saveSignature()" class="px-3 py-1 bg-indigo-600 text-white rounded text-xs font-semibold hover:bg-indigo-700 transition-colors">確定帶入合約</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+            <div class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed pl-1">
+              ${highlightedContent}
             </div>
-        </section>
-
-        <!-- Right Column: Interactive Paper PDF Preview -->
-        <section class="w-full lg:w-[55%] flex flex-col items-center">
-            
-            <div class="no-print w-full max-w-[210mm] flex justify-between items-center mb-3">
-                <span class="text-sm font-semibold text-slate-500 flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-emerald-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>
-                    A4 PDF 即時渲染預覽
-                </span>
-                <span class="text-xs text-slate-400">列印時將自動隱藏多餘操作按鈕</span>
-            </div>
-
-            <!-- Printable container starts here -->
-            <div id="print-area" class="preview-page">
-                
-                <!-- Theme styling bar (Accent line) -->
-                <div id="preview-accent-bar" class="absolute top-0 left-0 right-0 h-2.5 bg-indigo-900"></div>
-
-                <!-- Document Title -->
-                <div class="text-center mt-3 mb-6">
-                    <h2 id="view-title" class="text-2xl font-extrabold tracking-wide text-slate-900 pb-2 border-b border-double border-slate-300">長鋐門窗有限公司合約書</h2>
-                </div>
-
-                <!-- Parties Information Block -->
-                <div class="grid grid-cols-2 gap-x-8 gap-y-2.5 text-xs text-slate-700 mb-5 leading-relaxed">
-                    <!-- Left: Buyer Details -->
-                    <div class="space-y-1">
-                        <div><strong class="text-slate-900">購買人簽名：</strong> <span id="view-buyer" class="underline underline-offset-4 decoration-dashed text-slate-800 font-bold"></span></div>
-                        <div><strong class="text-slate-900">身分證字號：</strong> <span id="view-buyerId"></span></div>
-                        <div><strong class="text-slate-900">聯絡地址：</strong> <span id="view-buyerAddress"></span></div>
-                        <div><strong class="text-slate-900">聯絡電話：</strong> <span id="view-buyerPhone"></span></div>
-                        <div><strong class="text-slate-900">施工工地：</strong> <span id="view-siteAddress" class="text-slate-900 font-medium"></span></div>
-                    </div>
-                    <!-- Right: Seller Details -->
-                    <div class="space-y-1 bg-slate-50/50 p-2.5 rounded border border-slate-100">
-                        <div><strong class="text-slate-900">出賣公司：</strong> <span id="view-sellerCompany" class="font-bold"></span></div>
-                        <div><strong class="text-slate-900">公司地址：</strong> <span id="view-sellerAddress"></span></div>
-                        <div><strong class="text-slate-900">公司電話：</strong> <span id="view-sellerPhone"></span></div>
-                        <div><strong class="text-slate-900">傳真號碼：</strong> <span id="view-sellerFax"></span></div>
-                        <div class="flex justify-between">
-                            <div><strong class="text-slate-900">業務人員：</strong> <span id="view-salesperson"></span></div>
-                            <div><strong class="text-slate-900">報價日期：</strong> <span id="view-date" class="font-bold"></span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Items Details Grid -->
-                <table class="w-full border-collapse border border-slate-300 text-xs text-slate-700 mb-4 overflow-hidden">
-                    <thead>
-                        <tr id="preview-table-header" class="bg-indigo-900 text-white font-bold text-center border-b border-slate-300">
-                            <th class="border border-slate-300 py-2 px-1 w-[6%]">項次</th>
-                            <th class="border border-slate-300 py-2 px-2 w-[44%] text-left">品名規格及施工內容</th>
-                            <th class="border border-slate-300 py-2 px-1 w-[12%]">規格尺寸</th>
-                            <th class="border border-slate-300 py-2 px-1 w-[8%]">數量</th>
-                            <th class="border border-slate-300 py-2 px-1.5 w-[12%] text-right">單價</th>
-                            <th class="border border-slate-300 py-2 px-1.5 w-[14%] text-right">複價</th>
-                        </tr>
-                    </thead>
-                    <tbody id="preview-table-body" class="divide-y divide-slate-200">
-                        <!-- Items rendered by javascript -->
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-slate-50 font-bold border-t border-slate-300">
-                            <td colspan="4" class="border border-slate-300 py-2.5 px-3 text-left">
-                                <span class="text-slate-500 font-medium mr-2">總金額大寫：</span>
-                                <span id="view-grandTotalChinese" class="text-slate-900 tracking-wide text-sm">零元整</span>
-                            </td>
-                            <td class="border border-slate-300 py-2.5 px-1.5 text-center text-slate-600">合計</td>
-                            <td class="border border-slate-300 py-2.5 px-2 text-right text-slate-900 text-sm font-black" id="view-grandTotal">
-                                NT$ 0
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-
-                <!-- Bottom Parameters and Checklists Grid -->
-                <div class="border border-slate-300 rounded p-3 text-xs text-slate-600 mb-4 bg-slate-50/30 leading-relaxed grid grid-cols-1 md:grid-cols-12 gap-3">
-                    <!-- Column 1: Dimensions -->
-                    <div class="md:col-span-5 space-y-1.5 border-b md:border-b-0 md:border-r border-slate-200 pb-3 md:pb-0 md:pr-3">
-                        <div><strong class="text-slate-900">門洞最大：</strong> <span id="view-doorMax" class="font-mono">--</span></div>
-                        <div><strong class="text-slate-900">門洞最小：</strong> <span id="view-doorMin" class="font-mono">--</span></div>
-                        <div><strong class="text-slate-900">大門尺寸：</strong> <span id="view-doorSize" class="font-mono">--</span></div>
-                        <div><strong class="text-slate-900">開向備註：</strong> <span id="view-doorOpen">--</span></div>
-                    </div>
-                    <!-- Column 2: Working Checklist Options -->
-                    <div class="md:col-span-7 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
-                        <div class="flex items-center gap-1"><span id="view-chk-shipping" class="text-slate-400">□</span> 前天出貨</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-cementGate" class="text-slate-400">□</span> 客戶留水泥灌門檻</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-floor1" class="text-slate-400">□</span> 一樓可放置</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-isBuilding" class="text-slate-400">□</span> 大樓</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-isApartment" class="text-slate-400">□</span> 公寓</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-noDoor" class="text-slate-400">□</span> 無門</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-hasDoorMorning" class="text-slate-400">□</span> 客戶上午拆除</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-tempDoor" class="text-slate-400">□</span> 臨時門</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-elevator" class="text-slate-400">□</span> 有電梯</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-frameCarry" class="text-slate-400">□</span> 框搬</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-fanCarry" class="text-slate-400">□</span> 扇搬</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-crane" class="text-slate-400">□</span> 吊車</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-woodboard" class="text-slate-400">□</span> 木板</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-wallTrim" class="text-slate-400">□</span> 修牆</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-designer" class="text-slate-400">□</span> 設計師</div>
-                        <div class="flex items-center gap-1"><span id="view-chk-onlyChangeDoor" class="text-slate-400">□</span> 只有換門</div>
-                    </div>
-                </div>
-
-                <!-- Terms & Disclaimers -->
-                <div class="border border-slate-200 rounded p-3 text-[10px] text-slate-500 leading-relaxed space-y-1 mb-5 bg-white">
-                    <strong class="text-slate-700 block mb-1 text-xs">合約條款與保固細則：</strong>
-                    <div id="view-extraNotes" class="whitespace-pre-line text-[10px]">
-                        1. 產品保固以保固證明書為準，如因天災、人為操作不當或外力影響不予保固。
-                        2. 實木為天然素材，因氣候與濕度環境變化產生的輕微細紋或形變屬自然現象。
-                    </div>
-                </div>
-
-                <!-- Signatures & Stamps Footer -->
-                <div class="grid grid-cols-3 gap-6 text-xs text-slate-700 mt-6 pt-4 border-t border-dashed border-slate-300">
-                    <div class="space-y-4">
-                        <div>購買人確認簽章：</div>
-                        <div class="h-16 flex items-end">
-                            <img id="view-buyer-signature" src="" class="hidden max-h-14 max-w-full" alt="客戶簽章">
-                            <span id="sig-placeholder" class="text-slate-300 italic text-[11px] border-b border-slate-300 w-full block pb-1">（請於設定頁面進行電子簽章）</span>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <div>丈量人員：<span id="view-measuringStaff" class="font-medium underline decoration-slate-300 ml-1"></span></div>
-                        <div>安裝人員：<span id="view-installStaff" class="font-medium underline decoration-slate-300 ml-1"></span></div>
-                    </div>
-                    <div class="space-y-4 text-right">
-                        <div>出賣人（公司簽章）：</div>
-                        <div class="h-16 flex items-end justify-end">
-                            <div class="border-2 border-red-500 text-red-500 font-extrabold p-1 text-[10px] tracking-widest rounded rotate-[-3deg] uppercase">
-                                長鋐門窗有限公司印
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-    </main>
-
-    <footer class="no-print bg-slate-800 text-slate-400 py-4 text-center text-xs mt-auto border-t border-slate-700">
-        <p>© 2026 長鋐門窗有限公司 & PDF 智慧財稅工程合約報價引擎. All rights reserved.</p>
-    </footer>
-
-    <!-- Core Interactive Logic Script -->
-    <script>
-        // State variables
-        let appState = {
-            title: "長鋐門窗有限公司合約書",
-            buyer: "",
-            buyerId: "",
-            buyerAddress: "",
-            buyerPhone: "",
-            siteAddress: "",
-            sellerCompany: "長鋐門窗有限公司",
-            sellerAddress: "北市民族東路192號1樓",
-            sellerPhone: "02-2595-8138、2595-5676",
-            sellerFax: "02-2595-7865",
-            sellerEmail: "chdoor88@yahoo.com.tw",
-            sellerWeb: "http://www.door-king.com.tw",
-            salesperson: "林小姐",
-            date: "",
-            extraNotes: "",
-            items: [],
-            siteSpecs: {
-                doorMax: "",
-                doorMin: "",
-                doorSize: "",
-                doorOpen: "",
-                measuringStaff: "",
-                installStaff: "",
-                shipping: false,
-                cementGate: false,
-                floor1: false,
-                isBuilding: false,
-                isApartment: false,
-                noDoor: false,
-                hasDoorMorning: false,
-                tempDoor: false,
-                elevator: false,
-                frameCarry: false,
-                fanCarry: false,
-                crane: false,
-                woodboard: false,
-                wallTrim: false,
-                designer: false,
-                onlyChangeDoor: false
-            }
-        };
-
-        // Initialize App on Window Load
-        window.onload = function() {
-            // Drag and Drop implementation
-            const dropZone = document.getElementById('drop-zone');
-            const fileInput = document.getElementById('file-input');
-
-            fileInput.addEventListener('change', handleFileSelect);
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('bg-indigo-100', 'border-indigo-600');
-            });
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('bg-indigo-100', 'border-indigo-600');
-            });
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('bg-indigo-100', 'border-indigo-600');
-                if (e.dataTransfer.files.length) {
-                    fileInput.files = e.dataTransfer.files;
-                    handleFileSelect({ target: fileInput });
-                }
-            });
-
-            // Signature Pad implementation
-            initSignaturePad();
-
-            // Load Default Demo
-            loadSampleData();
-        };
-
-        // Load Predefined Sample Data mimicking the uploaded CSV
-        function loadSampleData() {
-            appState = {
-                title: "長鋐門窗有限公司合約書",
-                buyer: "張先生",
-                buyerId: "",
-                buyerAddress: "北市松山區民生東路五段153號6樓之12",
-                buyerPhone: "0906-170-910",
-                siteAddress: "北市松山區民生東路五段153號6樓之12",
-                sellerCompany: "長鋐門窗有限公司",
-                sellerAddress: "北市民族東路192號1樓",
-                sellerPhone: "02-2595-8138、2595-5676",
-                sellerFax: "02-2595-7865",
-                sellerEmail: "chdoor88@yahoo.com.tw",
-                sellerWeb: "http://www.door-king.com.tw",
-                salesperson: "林小姐",
-                date: "民國115年07月09日",
-                extraNotes: "1. 實木為天然素材，如因環境、氣候…等自然影響，而有木飾材受潮、龜裂變形、鑄鋁/碳纖板氧化或玻璃起霧屬自然現象，故不在保固範圍內；本公司售出的木飾材不具備防水功能。\n2. 賣方研發雙氣密、三氣密…等工法不等同專業隔音門製作工法，如需要專業隔音門的產品系列，需事先特別告知，並於此合約單備註上確認明訂內容！",
-                items: [
-                    {
-                        id: 1,
-                        name: "內玄關:CK-1015流蘇雙面壓花\n(格子底紋.F60A防火+具遮煙性證明+外掛式門弓器)\n*整樘鍍鋅鋼板粉體烤漆(無防水)\n*烤漆顏色：灰砂藍\n*門鎖：台製防火一般內轉五金",
-                        spec: "100 * 215 * 12",
-                        qty: 1,
-                        price: 73500,
-                        subtotal: 73500,
-                        notes: ""
-                    }
-                ],
-                siteSpecs: {
-                    doorMax: "X x X",
-                    doorMin: "X x X",
-                    doorSize: "X x X",
-                    doorOpen: "孔塞19mm, 靠外側置中",
-                    measuringStaff: "林大同",
-                    installStaff: "張小華",
-                    shipping: false,
-                    cementGate: true,
-                    floor1: true,
-                    isBuilding: true,
-                    isApartment: false,
-                    noDoor: false,
-                    hasDoorMorning: false,
-                    tempDoor: false,
-                    elevator: true,
-                    frameCarry: false,
-                    fanCarry: false,
-                    crane: false,
-                    woodboard: false,
-                    wallTrim: false,
-                    designer: false,
-                    onlyChangeDoor: true
-                }
-            };
-
-            updateFormInputs();
-            renderPreview();
-            
-            // Show Status
-            const statusDiv = document.getElementById('file-status');
-            const statusText = document.getElementById('file-status-text');
-            statusDiv.classList.remove('hidden');
-            statusText.innerText = "已載入張先生範例合約報價規格";
-        }
-
-        // File Handler for xlsx or csv parsing
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                // Get 2D raw cells array
-                const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-                parseExcelOrCSV(rawData);
-            };
-            reader.readAsArrayBuffer(file);
-
-            // Update UI feedback
-            const statusDiv = document.getElementById('file-status');
-            const statusText = document.getElementById('file-status-text');
-            statusDiv.classList.remove('hidden');
-            statusText.innerText = `成功分析並匯入檔案：${file.name}`;
-        }
-
-        // Intelligent parsing function mimicking the structures of Taiwanese door contracts
-        function parseExcelOrCSV(rawData) {
-            let foundTitle = "";
-            let newItems = [];
-            let inTable = false;
-            let tableHeaderRowIndex = -1;
-
-            let colIdxMap = { item: -1, name: -1, spec: -1, qty: -1, price: -1, subtotal: -1, note: -1 };
-
-            // Scan rows
-            for (let r = 0; r < rawData.length; r++) {
-                const row = rawData[r];
-                if (!row || row.length === 0) continue;
-
-                const rowStr = row.map(c => String(c).trim()).join(' ');
-
-                // 1. Detect Title
-                if (!foundTitle && (rowStr.includes("合約書") || rowStr.includes("報價單") || rowStr.includes("估價單"))) {
-                    for (let c = 0; c < row.length; c++) {
-                        const cellVal = String(row[c]).trim();
-                        if (cellVal.includes("合約書") || cellVal.includes("報價單") || cellVal.includes("估價單")) {
-                            appState.title = cellVal;
-                            foundTitle = true;
-                            break;
-                        }
-                    }
-                }
-
-                // 2. Identify Metadata key-value mappings
-                for (let c = 0; c < row.length; c++) {
-                    const cellStr = String(row[c]).trim();
-                    if (!cellStr) continue;
-
-                    if (cellStr.includes("購買人") || cellStr.includes("客戶名稱")) {
-                        let nextVal = extractFieldVal(row, c, /購買人(簽名)?[：:]?/);
-                        if (nextVal) appState.buyer = nextVal;
-                    }
-                    if (cellStr.includes("身分證")) {
-                        let nextVal = extractFieldVal(row, c, /身分證字號[：:]?/);
-                        if (nextVal) appState.buyerId = nextVal;
-                    }
-                    if (cellStr.includes("公司：") || cellStr.includes("公   司：")) {
-                        let nextVal = extractFieldVal(row, c, /公\s*司[：:]?/);
-                        if (nextVal) appState.sellerCompany = nextVal;
-                    }
-                    if (cellStr.includes("公司地址") || cellStr.match(/^地\s*址[：:]?/)) {
-                        let nextVal = extractFieldVal(row, c, /(公司地址|地\s*址)[：:]?/);
-                        if (nextVal) {
-                            if (cellStr.includes("公司")) appState.sellerAddress = nextVal;
-                            else { appState.buyerAddress = nextVal; appState.siteAddress = nextVal; }
-                        }
-                    }
-                    if (cellStr.includes("公司電話") || cellStr.match(/^電\s*話[：:]?/)) {
-                        let nextVal = extractFieldVal(row, c, /(公司電話|電\s*話)[：:]?/);
-                        if (nextVal) {
-                            if (cellStr.includes("公司")) appState.sellerPhone = nextVal;
-                            else appState.buyerPhone = nextVal;
-                        }
-                    }
-                    if (cellStr.includes("傳真")) {
-                        let nextVal = extractFieldVal(row, c, /(傳真|傳真電話)[：:]?/);
-                        if (nextVal) appState.sellerFax = nextVal;
-                    }
-                    if (cellStr.includes("聯絡人")) {
-                        let nextVal = extractFieldVal(row, c, /聯絡人[：:]?/);
-                        // If it has phone inside it, extract
-                        if (nextVal) {
-                            const telMatch = nextVal.match(/[0-9\-]+/);
-                            if (telMatch) {
-                                appState.buyerPhone = telMatch[0];
-                                appState.buyer = nextVal.replace(telMatch[0], '').trim();
-                            } else {
-                                appState.buyer = nextVal;
-                            }
-                        }
-                    }
-                    if (cellStr.includes("業務人員")) {
-                        let nextVal = extractFieldVal(row, c, /業務人員[：:]?/);
-                        if (nextVal) appState.salesperson = nextVal;
-                    }
-                    if (cellStr.includes("報價日期")) {
-                        let nextVal = extractFieldVal(row, c, /報價日期[：:]?/);
-                        if (nextVal) appState.date = nextVal;
-                    }
-                    if (cellStr.includes("工   地") || cellStr.includes("工地")) {
-                        let nextVal = extractFieldVal(row, c, /(工\s*地|工地)[：:]?/);
-                        if (nextVal) appState.siteAddress = nextVal;
-                    }
-                }
-
-                // 3. Detect Table Header & Switch mode to items reading
-                if (!inTable && (rowStr.includes("項次") || rowStr.includes("品名") || rowStr.includes("品  名"))) {
-                    inTable = true;
-                    tableHeaderRowIndex = r;
-                    // Auto mapping columns
-                    for (let c = 0; c < row.length; c++) {
-                        const cellVal = String(row[c]).replace(/\s+/g, '');
-                        if (cellVal.includes("項次")) colIdxMap.item = c;
-                        else if (cellVal.includes("品名")) colIdxMap.name = c;
-                        else if (cellVal.includes("規格")) colIdxMap.spec = c;
-                        else if (cellVal.includes("數量")) colIdxMap.qty = c;
-                        else if (cellVal.includes("單價")) colIdxMap.price = c;
-                        else if (cellVal.includes("複價")) colIdxMap.subtotal = c;
-                        else if (cellVal.includes("備註") || cellVal.includes("五金")) colIdxMap.note = c;
-                    }
-                    continue;
-                }
-
-                // 4. Handle Items Lines
-                if (inTable) {
-                    // Stop Reading table if we find bottom general clauses or checklist
-                    if (rowStr.includes("因實木為天然素材") || rowStr.includes("賣方研發雙氣密") || rowStr.includes("工程地址：") || rowStr.includes("備註：") || rowStr.includes("大門尺寸")) {
-                        inTable = false;
-                        
-                        // Parse Footer fields directly in remainder rows
-                        for (let fr = r; fr < rawData.length; fr++) {
-                            const fRow = rawData[fr];
-                            const fRowStr = fRow.map(cell => String(cell).trim()).filter(Boolean).join(' ');
-                            if (!fRowStr) continue;
-
-                            if (fRowStr.includes("丈量人員")) {
-                                appState.siteSpecs.measuringStaff = fRowStr.split("丈量人員")[1]?.replace(/[：:\s*□☑■]/g, '') || "";
-                            }
-                            if (fRowStr.includes("安裝人員")) {
-                                appState.siteSpecs.installStaff = fRowStr.split("安裝人員")[1]?.replace(/[：:\s*□☑■]/g, '') || "";
-                            }
-                            
-                            // Checkboxes Detection
-                            if (fRowStr.includes("前天出貨") || fRowStr.includes("前       天出貨")) appState.siteSpecs.shipping = true;
-                            if (fRowStr.includes("水泥砂幫灌門檻")) appState.siteSpecs.cementGate = true;
-                            if (fRowStr.includes("一樓可放置")) appState.siteSpecs.floor1 = true;
-                            if (fRowStr.includes("大樓")) appState.siteSpecs.isBuilding = true;
-                            if (fRowStr.includes("公寓")) appState.siteSpecs.isApartment = true;
-                            if (fRowStr.includes("無門")) appState.siteSpecs.noDoor = true;
-                            if (fRowStr.includes("上午拆除")) appState.siteSpecs.hasDoorMorning = true;
-                            if (fRowStr.includes("臨時門")) appState.siteSpecs.tempDoor = true;
-                            if (fRowStr.includes("有電梯")) appState.siteSpecs.elevator = true;
-                            if (fRowStr.includes("框搬")) appState.siteSpecs.frameCarry = true;
-                            if (fRowStr.includes("扇搬")) appState.siteSpecs.fanCarry = true;
-                            if (fRowStr.includes("吊車")) appState.siteSpecs.crane = true;
-                            if (fRowStr.includes("木板")) appState.siteSpecs.woodboard = true;
-                            if (fRowStr.includes("修牆")) appState.siteSpecs.wallTrim = true;
-                            if (fRowStr.includes("設計師")) appState.siteSpecs.designer = true;
-                            if (fRowStr.includes("只有換門")) appState.siteSpecs.onlyChangeDoor = true;
-
-                            // Dimensions Extractions
-                            if (fRowStr.includes("門洞最大")) {
-                                const m = fRowStr.match(/門洞最大\s*([^\s,☑□X*x]+(\s*[X*x]\s*[^\s,☑□X*x]+)*)/);
-                                if (m) appState.siteSpecs.doorMax = m[1];
-                            }
-                            if (fRowStr.includes("門洞最小")) {
-                                const m = fRowStr.match(/門洞最小\s*([^\s,☑□X*x]+(\s*[X*x]\s*[^\s,☑□X*x]+)*)/);
-                                if (m) appState.siteSpecs.doorMin = m[1];
-                            }
-                            if (fRowStr.includes("大門尺寸")) {
-                                const m = fRowStr.match(/大門尺寸\s*([^\s,☑□X*x]+(\s*[X*x]\s*[^\s,☑□X*x]+)*)/);
-                                if (m) appState.siteSpecs.doorSize = m[1];
-                            }
-                            if (fRowStr.includes("開向：")) {
-                                appState.siteSpecs.doorOpen = fRowStr.split("開向：")[1] || "";
-                            }
-                        }
-                        break;
-                    }
-
-                    const getVal = (col) => (col !== -1 && row[col] !== undefined) ? String(row[col]).trim() : "";
-
-                    const rawItemNo = getVal(colIdxMap.item);
-                    const rawName = getVal(colIdxMap.name);
-                    const rawSpec = getVal(colIdxMap.spec);
-                    const rawQty = parseFloat(getVal(colIdxMap.qty)) || "";
-                    const rawPrice = parseFloat(getVal(colIdxMap.price)) || "";
-                    const rawSub = parseFloat(getVal(colIdxMap.subtotal)) || "";
-                    const rawNote = getVal(colIdxMap.note);
-
-                    // If we have an Item number, it is a new main item
-                    if (rawItemNo && !isNaN(rawItemNo)) {
-                        newItems.push({
-                            id: parseInt(rawItemNo),
-                            name: rawName,
-                            spec: rawSpec,
-                            qty: rawQty,
-                            price: rawPrice,
-                            subtotal: rawSub || (rawQty && rawPrice ? rawQty * rawPrice : 0),
-                            notes: rawNote
-                        });
-                    } else {
-                        // Append descriptions to preceding row (sub-descriptions for specifications)
-                        if (newItems.length > 0) {
-                            const prev = newItems[newItems.length - 1];
-                            let additions = [];
-                            if (rawName) additions.push(rawName);
-                            if (rawNote) additions.push(rawNote);
-                            if (additions.length > 0) {
-                                prev.name += "\n" + additions.join(" ");
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (newItems.length > 0) {
-                appState.items = newItems;
-            }
-
-            updateFormInputs();
-            renderPreview();
-        }
-
-        // Helper extract value next to keyword
-        function extractFieldVal(row, colIdx, regex) {
-            let str = String(row[colIdx]).trim();
-            let cleaned = str.replace(regex, '').trim();
-            if (cleaned) return cleaned;
-            if (colIdx + 1 < row.length) {
-                return String(row[colIdx + 1]).trim();
-            }
-            return "";
-        }
-
-        // Re-calculate Grand Total & Convert to Traditional Chinese Financial Format
-        function calculateGrandTotal() {
-            let total = 0;
-            appState.items.forEach(item => {
-                total += parseFloat(item.subtotal) || 0;
-            });
-            return total;
-        }
-
-        // Traditional Chinese Financial Numbers Converter
-        function numberToChinese(num) {
-            if (isNaN(num)) return "零元整";
-            const digits = ["零", "壹", "貳", "參", "肆", "伍", "陸", "柒", "捌", "玖"];
-            const units = ["", "拾", "佰", "仟"];
-            const bigUnits = ["", "萬", "億", "兆"];
-            
-            let str = Math.round(num).toString();
-            if (str === "0") return "零元整";
-            
-            let result = "";
-            let len = str.length;
-            
-            for (let i = 0; i < len; i++) {
-                let digit = parseInt(str[i]);
-                let pos = len - 1 - i; 
-                let unitPos = pos % 4;
-                let bigUnitPos = Math.floor(pos / 4);
-                
-                if (digit !== 0) {
-                    result += digits[digit] + units[unitPos];
-                } else {
-                    if (result.length > 0 && result[result.length - 1] !== "零" && unitPos !== 0) {
-                        result += "零";
-                    }
-                }
-                
-                if (unitPos === 0 && bigUnitPos > 0) {
-                    if (result.endsWith("零")) {
-                        result = result.slice(0, -1);
-                    }
-                    result += bigUnits[bigUnitPos];
-                }
-            }
-            
-            if (result.endsWith("零")) {
-                result = result.slice(0, -1);
-            }
-            
-            return result ? "新台幣 " + result + " 元整" : "零元整";
-        }
-
-        // Update Inputs values from State
-        function updateFormInputs() {
-            document.getElementById('edit-title').value = appState.title;
-            document.getElementById('edit-buyer').value = appState.buyer;
-            document.getElementById('edit-buyerId').value = appState.buyerId;
-            document.getElementById('edit-buyerPhone').value = appState.buyerPhone;
-            document.getElementById('edit-date').value = appState.date;
-            document.getElementById('edit-siteAddress').value = appState.siteAddress;
-            document.getElementById('edit-sellerCompany').value = appState.sellerCompany;
-            document.getElementById('edit-salesperson').value = appState.salesperson;
-            document.getElementById('edit-sellerPhone').value = appState.sellerPhone;
-            document.getElementById('edit-sellerFax').value = appState.sellerFax;
-            document.getElementById('edit-sellerAddress').value = appState.sellerAddress;
-            document.getElementById('edit-extraNotes').value = appState.extraNotes;
-
-            // Dimensions
-            document.getElementById('edit-doorMax').value = appState.siteSpecs.doorMax;
-            document.getElementById('edit-doorMin').value = appState.siteSpecs.doorMin;
-            document.getElementById('edit-doorSize').value = appState.siteSpecs.doorSize;
-            document.getElementById('edit-doorOpen').value = appState.siteSpecs.doorOpen;
-            document.getElementById('edit-measuringStaff').value = appState.siteSpecs.measuringStaff;
-            document.getElementById('edit-installStaff').value = appState.siteSpecs.installStaff;
-
-            // Checkboxes
-            document.getElementById('chk-shipping').checked = appState.siteSpecs.shipping;
-            document.getElementById('chk-cementGate').checked = appState.siteSpecs.cementGate;
-            document.getElementById('chk-floor1').checked = appState.siteSpecs.floor1;
-            document.getElementById('chk-isBuilding').checked = appState.siteSpecs.isBuilding;
-            document.getElementById('chk-isApartment').checked = appState.siteSpecs.isApartment;
-            document.getElementById('chk-noDoor').checked = appState.siteSpecs.noDoor;
-            document.getElementById('chk-hasDoorMorning').checked = appState.siteSpecs.hasDoorMorning;
-            document.getElementById('chk-tempDoor').checked = appState.siteSpecs.tempDoor;
-            document.getElementById('chk-elevator').checked = appState.siteSpecs.elevator;
-            document.getElementById('chk-frameCarry').checked = appState.siteSpecs.frameCarry;
-            document.getElementById('chk-fanCarry').checked = appState.siteSpecs.fanCarry;
-            document.getElementById('chk-crane').checked = appState.siteSpecs.crane;
-            document.getElementById('chk-woodboard').checked = appState.siteSpecs.woodboard;
-            document.getElementById('chk-wallTrim').checked = appState.siteSpecs.wallTrim;
-            document.getElementById('chk-designer').checked = appState.siteSpecs.designer;
-            document.getElementById('chk-onlyChangeDoor').checked = appState.siteSpecs.onlyChangeDoor;
-
-            renderItemsEditor();
-        }
-
-        // Render editable dynamic Rows in left panel
-        function renderItemsEditor() {
-            const container = document.getElementById('edit-items-container');
-            container.innerHTML = "";
-
-            appState.items.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = "p-4 bg-slate-50 rounded-lg border border-slate-200 relative space-y-3";
-                div.innerHTML = `
-                    <button onclick="deleteRow(${index})" class="absolute top-2.5 right-2.5 text-slate-400 hover:text-red-500 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">項次 ${index + 1}</span>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 mb-0.5">品名施工內容</label>
-                        <textarea oninput="updateItemField(${index}, 'name', this.value)" rows="3" class="w-full border border-slate-200 rounded px-2 py-1 text-xs">${item.name}</textarea>
-                    </div>
-                    <div class="grid grid-cols-4 gap-2">
-                        <div class="col-span-2">
-                            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">規格尺寸</label>
-                            <input type="text" value="${item.spec}" oninput="updateItemField(${index}, 'spec', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-xs">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">數量</label>
-                            <input type="number" value="${item.qty}" oninput="updateItemField(${index}, 'qty', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-xs">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">單價</label>
-                            <input type="number" value="${item.price}" oninput="updateItemField(${index}, 'price', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-xs">
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // Live update model attributes
-        function updateField(key, value) {
-            appState[key] = value;
-            renderPreview();
-        }
-
-        function updateSpec(key, value) {
-            appState.siteSpecs[key] = value;
-            renderPreview();
-        }
-
-        function updateCheckSpec(key, value) {
-            appState.siteSpecs[key] = value;
-            renderPreview();
-        }
-
-        function updateItemField(index, field, value) {
-            if (field === 'qty' || field === 'price') {
-                appState.items[index][field] = parseFloat(value) || 0;
-                appState.items[index].subtotal = appState.items[index].qty * appState.items[index].price;
-            } else {
-                appState.items[index][field] = value;
-            }
-            renderPreview();
-        }
-
-        function addNewRow() {
-            appState.items.push({
-                id: appState.items.length + 1,
-                name: "新工程品目",
-                spec: "",
-                qty: 1,
-                price: 0,
-                subtotal: 0,
-                notes: ""
-            });
-            updateFormInputs();
-            renderPreview();
-        }
-
-        function deleteRow(index) {
-            appState.items.splice(index, 1);
-            // Re-index remaining
-            appState.items.forEach((item, idx) => {
-                item.id = idx + 1;
-            });
-            updateFormInputs();
-            renderPreview();
-        }
-
-        // Master Render function for Preview Paper (A4 container)
-        function renderPreview() {
-            document.getElementById('view-title').innerText = appState.title || "合約書";
-            document.getElementById('view-buyer').innerText = appState.buyer || "（請輸入客戶）";
-            document.getElementById('view-buyerId').innerText = appState.buyerId || "--";
-            document.getElementById('view-buyerAddress').innerText = appState.buyerAddress || appState.siteAddress || "--";
-            document.getElementById('view-buyerPhone').innerText = appState.buyerPhone || "--";
-            document.getElementById('view-siteAddress').innerText = appState.siteAddress || "--";
-            document.getElementById('view-sellerCompany').innerText = appState.sellerCompany;
-            document.getElementById('view-sellerAddress').innerText = appState.sellerAddress;
-            document.getElementById('view-sellerPhone').innerText = appState.sellerPhone;
-            document.getElementById('view-sellerFax').innerText = appState.sellerFax;
-            document.getElementById('view-salesperson').innerText = appState.salesperson;
-            document.getElementById('view-date').innerText = appState.date || "民國    年   月   日";
-
-            // Populate Table
-            const tbody = document.getElementById('preview-table-body');
-            tbody.innerHTML = "";
-
-            appState.items.forEach((item) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/50 transition-colors";
-                tr.innerHTML = `
-                    <td class="border border-slate-300 py-1.5 px-1 text-center font-mono font-bold">${item.id}</td>
-                    <td class="border border-slate-300 py-1.5 px-2 font-medium whitespace-pre-wrap text-[11px] leading-relaxed">${item.name}</td>
-                    <td class="border border-slate-300 py-1.5 px-1 text-center font-mono">${item.spec || '--'}</td>
-                    <td class="border border-slate-300 py-1.5 px-1 text-center font-bold">${item.qty}</td>
-                    <td class="border border-slate-300 py-1.5 px-2 text-right font-mono">${item.price ? 'NT$ ' + item.price.toLocaleString() : '--'}</td>
-                    <td class="border border-slate-300 py-1.5 px-2 text-right font-mono font-bold text-slate-900">${item.subtotal ? 'NT$ ' + item.subtotal.toLocaleString() : 'NT$ 0'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // Handle Empty Spacer row if layout is loose
-            if (appState.items.length < 4) {
-                const emptyCount = 4 - appState.items.length;
-                for (let i = 0; i < emptyCount; i++) {
-                    const tr = document.createElement('tr');
-                    tr.className = "h-8";
-                    tr.innerHTML = `
-                        <td class="border border-slate-300"></td>
-                        <td class="border border-slate-300"></td>
-                        <td class="border border-slate-300"></td>
-                        <td class="border border-slate-300"></td>
-                        <td class="border border-slate-300"></td>
-                        <td class="border border-slate-300"></td>
-                    `;
-                    tbody.appendChild(tr);
-                }
-            }
-
-            // Calculations
-            const grandTotal = calculateGrandTotal();
-            document.getElementById('view-grandTotal').innerText = `NT$ ${grandTotal.toLocaleString()}`;
-            document.getElementById('view-grandTotalChinese').innerText = numberToChinese(grandTotal);
-
-            // Spec & Checkboxes Render
-            document.getElementById('view-doorMax').innerText = appState.siteSpecs.doorMax || "--";
-            document.getElementById('view-doorMin').innerText = appState.siteSpecs.doorMin || "--";
-            document.getElementById('view-doorSize').innerText = appState.siteSpecs.doorSize || "--";
-            document.getElementById('view-doorOpen').innerText = appState.siteSpecs.doorOpen || "--";
-            document.getElementById('view-measuringStaff').innerText = appState.siteSpecs.measuringStaff || "--";
-            document.getElementById('view-installStaff').innerText = appState.siteSpecs.installStaff || "--";
-
-            // Checklist Symbols Update
-            const renderChk = (elementId, checked) => {
-                document.getElementById(elementId).innerText = checked ? "☑" : "□";
-                document.getElementById(elementId).className = checked ? "text-indigo-600 font-extrabold font-mono" : "text-slate-400 font-mono";
-            };
-
-            renderChk('view-chk-shipping', appState.siteSpecs.shipping);
-            renderChk('view-chk-cementGate', appState.siteSpecs.cementGate);
-            renderChk('view-chk-floor1', appState.siteSpecs.floor1);
-            renderChk('view-chk-isBuilding', appState.siteSpecs.isBuilding);
-            renderChk('view-chk-isApartment', appState.siteSpecs.isApartment);
-            renderChk('view-chk-noDoor', appState.siteSpecs.noDoor);
-            renderChk('view-chk-hasDoorMorning', appState.siteSpecs.hasDoorMorning);
-            renderChk('view-chk-tempDoor', appState.siteSpecs.tempDoor);
-            renderChk('view-chk-elevator', appState.siteSpecs.elevator);
-            renderChk('view-chk-frameCarry', appState.siteSpecs.frameCarry);
-            renderChk('view-chk-fanCarry', appState.siteSpecs.fanCarry);
-            renderChk('view-chk-crane', appState.siteSpecs.crane);
-            renderChk('view-chk-woodboard', appState.siteSpecs.woodboard);
-            renderChk('view-chk-wallTrim', appState.siteSpecs.wallTrim);
-            renderChk('view-chk-designer', appState.siteSpecs.designer);
-            renderChk('view-chk-onlyChangeDoor', appState.siteSpecs.onlyChangeDoor);
-
-            // Extra notes
-            document.getElementById('view-extraNotes').innerText = appState.extraNotes || "無備註。";
-        }
-
-        // Form tabs toggler
-        function switchTab(tab) {
-            ['basic', 'items', 'details', 'style'].forEach(t => {
-                document.getElementById(`tab-content-${t}`).classList.add('hidden');
-                document.getElementById(`tab-btn-${t}`).classList.remove('border-indigo-600', 'text-indigo-600');
-                document.getElementById(`tab-btn-${t}`).classList.add('border-transparent', 'text-slate-500');
-            });
-            document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
-            document.getElementById(`tab-btn-${tab}`).classList.add('border-indigo-600', 'text-indigo-600');
-            document.getElementById(`tab-btn-${tab}`).classList.remove('border-transparent', 'text-slate-500');
-        }
-
-        // Set Theme Palette for Quote
-        function setTheme(theme) {
-            const bar = document.getElementById('preview-accent-bar');
-            const tableHeader = document.getElementById('preview-table-header');
-            
-            // Standardizes classes
-            bar.className = "absolute top-0 left-0 right-0 h-2.5";
-            tableHeader.className = "text-white font-bold text-center border-b border-slate-300";
-
-            if (theme === 'navy') {
-                bar.classList.add('bg-indigo-900');
-                tableHeader.classList.add('bg-indigo-900');
-            } else if (theme === 'charcoal') {
-                bar.classList.add('bg-slate-800');
-                tableHeader.classList.add('bg-slate-800');
-            } else if (theme === 'forest') {
-                bar.classList.add('bg-emerald-900');
-                tableHeader.classList.add('bg-emerald-900');
-            }
-        }
-
-        // Set PDF Density / Spacing (Tight, Normal, Loose)
-        function setDensity(density) {
-            const table = document.querySelector('#print-area table');
-            if (density === 'tight') {
-                table.className = "w-full border-collapse border border-slate-300 text-[10px] text-slate-700 mb-2";
-            } else if (density === 'normal') {
-                table.className = "w-full border-collapse border border-slate-300 text-xs text-slate-700 mb-4";
-            } else if (density === 'loose') {
-                table.className = "w-full border-collapse border border-slate-300 text-sm text-slate-700 mb-6";
-            }
-        }
-
-        // Signature Pad Drawing Logic
-        let sigCanvas, sigCtx, drawing = false;
-
-        function initSignaturePad() {
-            sigCanvas = document.getElementById('sig-canvas');
-            sigCtx = sigCanvas.getContext('2d');
-            sigCtx.strokeStyle = "#0f172a";
-            sigCtx.lineWidth = 2.5;
-            sigCtx.lineCap = "round";
-
-            // Mouse events
-            sigCanvas.addEventListener('mousedown', startDrawing);
-            sigCanvas.addEventListener('mousemove', draw);
-            sigCanvas.addEventListener('mouseup', stopDrawing);
-            sigCanvas.addEventListener('mouseleave', stopDrawing);
-
-            // Touch events
-            sigCanvas.addEventListener('touchstart', (e) => {
-                const touch = e.touches[0];
-                const rect = sigCanvas.getBoundingClientRect();
-                sigCtx.beginPath();
-                sigCtx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
-                drawing = true;
-                e.preventDefault();
-            });
-            sigCanvas.addEventListener('touchmove', (e) => {
-                if (!drawing) return;
-                const touch = e.touches[0];
-                const rect = sigCanvas.getBoundingClientRect();
-                sigCtx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
-                sigCtx.stroke();
-                e.preventDefault();
-            });
-            sigCanvas.addEventListener('touchend', stopDrawing);
-        }
-
-        function startDrawing(e) {
-            const rect = sigCanvas.getBoundingClientRect();
-            sigCtx.beginPath();
-            sigCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-            drawing = true;
-        }
-
-        function draw(e) {
-            if (!drawing) return;
-            const rect = sigCanvas.getBoundingClientRect();
-            sigCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-            sigCtx.stroke();
-        }
-
-        function stopDrawing() {
-            drawing = false;
-        }
-
-        function clearSignature() {
-            sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
-            document.getElementById('view-buyer-signature').src = "";
-            document.getElementById('view-buyer-signature').classList.add('hidden');
-            document.getElementById('sig-placeholder').classList.remove('hidden');
-        }
-
-        function saveSignature() {
-            // Check if canvas is blank
-            const blank = document.createElement('canvas');
-            blank.width = sigCanvas.width;
-            blank.height = sigCanvas.height;
-            if (sigCanvas.toDataURL() === blank.toDataURL()) {
-                alert("請先在簽名板上書寫您的簽名！");
-                return;
-            }
-
-            const dataURL = sigCanvas.toDataURL();
-            const img = document.getElementById('view-buyer-signature');
-            img.src = dataURL;
-            img.classList.remove('hidden');
-            document.getElementById('sig-placeholder').classList.add('hidden');
-        }
-
-        // Trigger Standard Browser system print to PDF (Excellent vector typography)
-        function triggerBrowserPrint() {
-            window.print();
-        }
-
-        // Trigger Direct high-quality PDF File Export (Using html2pdf)
-        function exportDirectPDF() {
-            const element = document.getElementById('print-area');
-            const buyerName = appState.buyer || "客戶";
-            const opt = {
-                margin:       10,
-                filename:     `長鋐門窗合約書_${buyerName}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            
-            // Temporary scale up signature rendering for crisp output
-            html2pdf().from(element).set(opt).save();
-        }
-    </script>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
 </body>
 </html>

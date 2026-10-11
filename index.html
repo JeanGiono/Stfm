@@ -3,28 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>地面安全題庫與實戰測驗系統</title>
+  <title>綜合專業測考題庫整合系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Noto Sans TC"', 'Inter', 'sans-serif'],
+            sans: ['"Noto Sans TC"', 'Inter', '-apple-system', 'sans-serif'],
           },
           colors: {
             brand: {
-              50: '#eef6ff',
-              100: '#d9ebff',
-              500: '#1d63ed',
-              600: '#0047ca',
-              700: '#0037a5',
-              800: '#00287a',
-              900: '#001a53'
+              50: '#eef6ff', 100: '#d9ebff', 500: '#1d63ed', 600: '#0047ca', 700: '#0037a5', 800: '#00287a'
             }
           }
         }
@@ -32,1487 +26,1180 @@
     }
   </script>
   <style>
-    .tab-active {
-      border-bottom: 3px solid #1d63ed;
-      color: #1d63ed;
-      font-weight: 700;
-    }
-    .dark .tab-active {
-      border-bottom-color: #60a5fa;
-      color: #60a5fa;
-    }
-    .badge-highlight {
-      background: linear-gradient(135deg, rgba(29, 99, 237, 0.1) 0%, rgba(14, 165, 233, 0.1) 100%);
-    }
-    .mask-answer {
-      background-color: #f1f5f9;
-      color: #94a3b8;
-      border-radius: 4px;
-      padding: 2px 6px;
-      user-select: none;
-      cursor: pointer;
-      display: inline-block;
-      transition: all 0.2s ease;
-    }
-    .dark .mask-answer {
-      background-color: #334155;
-      color: #64748b;
-    }
-    .mask-revealed {
-      background-color: #dbeafe !important;
-      color: #1e40af !important;
-      font-weight: 600;
-    }
-    .dark .mask-revealed {
-      background-color: #1e3a8a !important;
-      color: #93c5fd !important;
-    }
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-    }
-    .dark ::-webkit-scrollbar-thumb {
-      background: #475569;
-    }
+    .opt-btn { transition: all 0.15s ease-in-out; }
+    .opt-btn:hover:not(:disabled) { border-color: #3b82f6; background-color: #eff6ff; }
+    .dark .opt-btn:hover:not(:disabled) { border-color: #60a5fa; background-color: #1e293b; }
+    .opt-selected-correct { background-color: #def7ec !important; border-color: #0e9f6e !important; color: #03543f !important; font-weight: 700; }
+    .opt-selected-wrong { background-color: #fde8e8 !important; border-color: #f05252 !important; color: #9b1c1c !important; font-weight: 700; }
+    .dark .opt-selected-correct { background-color: #064e3b !important; border-color: #059669 !important; color: #a7f3d0 !important; }
+    .dark .opt-selected-wrong { background-color: #7f1d1d !important; border-color: #dc2626 !important; color: #fecaca !important; }
+    .mask-answer { background-color: #f1f5f9; color: #94a3b8; border-radius: 4px; padding: 2px 6px; user-select: none; cursor: pointer; transition: all 0.2s; }
+    .dark .mask-answer { background-color: #334155; color: #64748b; }
+    .mask-revealed { background-color: #dbeafe !important; color: #1e40af !important; font-weight: 600; }
+    .dark .mask-revealed { background-color: #1e3a8a !important; color: #93c5fd !important; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
   </style>
 </head>
 <body class="h-full bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
 
+  <!-- TOP APP BAR -->
   <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-b border-slate-200 dark:border-slate-700 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-black text-lg shadow-md shadow-brand-500/20">
-          地安
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-3">
+        
+        <!-- Logo & Bank Title -->
+        <div class="flex items-center gap-3 min-w-0">
+          <div id="bankBadgeIcon" class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-black text-lg shadow-md flex-shrink-0">
+            修
+          </div>
+          <div class="truncate">
+            <h1 class="text-base sm:text-lg font-bold leading-tight flex items-center gap-2 truncate">
+              <span id="currentBankTitleText">修護標準化測考題庫</span>
+              <span id="bankCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-semibold hidden sm:inline-block">500題</span>
+            </h1>
+            <p id="bankSubtitleText" class="text-xs text-slate-500 dark:text-slate-400 truncate">修護管理作業手冊與標準化測考練習系統</p>
+          </div>
         </div>
-        <div>
-          <h1 class="text-lg sm:text-xl font-bold leading-tight flex items-center gap-2">
-            地面安全題庫與測驗系統
-            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 font-medium">完整60+6+5全收錄</span>
-          </h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400">基地地面失事預防、查處、職安設施規範與處置題庫</p>
+
+        <!-- Bank Switcher Dropdown & Tool Actions -->
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <!-- Main Switcher -->
+          <div class="flex items-center gap-1.5">
+            <label for="bankSelector" class="hidden md:inline text-xs font-bold text-slate-500 dark:text-slate-400">切換題庫：</label>
+            <select id="bankSelector" onchange="switchBank(this.value)" class="text-xs sm:text-sm font-semibold bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl px-2.5 py-1.5 text-brand-600 dark:text-brand-300 focus:ring-2 focus:ring-brand-500 outline-none">
+              <option value="maintenance">🛠️ 修護標準化 (500題選擇)</option>
+              <option value="english">🌐 英文原題模擬考 (150題選擇)</option>
+              <option value="safety">🛡️ 地面安全題庫 (60填空+6問答+5實境)</option>
+            </select>
+          </div>
+
+          <!-- Theme Toggle -->
+          <button onclick="toggleTheme()" class="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="切換深淺模式">
+            <svg id="sunIcon" class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <svg id="moonIcon" class="w-5 h-5 block dark:hidden text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </button>
         </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN BODY WRAPPER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- ========================================== -->
+    <!-- VIEW A: MULTIPLE CHOICE QUIZ (修護 500 / 英文 150) -->
+    <!-- ========================================== -->
+    <div id="view-mcq" class="space-y-5">
+      <!-- Control Toolbar Card -->
+      <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <label class="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300">模式：</label>
+            <select id="mcqModeSelect" onchange="handleMcqModeChange()" class="text-xs sm:text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-brand-500 outline-none">
+              <option value="practice">循序研讀練習 (全部循序)</option>
+              <option value="exam-20">隨機模擬考 (20 題)</option>
+              <option value="exam-50">隨機模擬考 (50 題)</option>
+              <option value="exam-100">隨機模擬考 (100 題)</option>
+              <option value="exam-all">全庫模擬測驗</option>
+            </select>
+
+            <button onclick="startNewMcqQuiz()" class="text-xs sm:text-sm bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-1.5 rounded-xl shadow-sm transition">
+              重新載入
+            </button>
+          </div>
+
+          <!-- Quick Function Buttons -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="mcqSubmitExamBtn" onclick="submitExam()" class="hidden text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-1.5 rounded-xl shadow-sm transition">
+              完成交卷
+            </button>
+            <button onclick="toggleMcqAnswers()" class="text-xs sm:text-sm bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 font-medium transition">
+              顯示/隱藏正解
+            </button>
+            <button id="mcqFilterWrongBtn" onclick="toggleFilterWrong()" class="text-xs sm:text-sm bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 font-medium transition">
+              只看錯題
+            </button>
+            <button onclick="resetMcqProgress()" class="text-xs sm:text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50 transition">
+              清空重測
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <input type="text" id="mcqSearchInput" onkeyup="handleMcqSearch()" placeholder="輸入關鍵字或題號進行快速搜尋..." class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none">
+          <svg class="w-4 h-4 absolute left-3.5 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+
+        <!-- Dashboard Stat Bar -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/60 text-center text-xs sm:text-sm">
+          <div class="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+            <span class="text-slate-400 block text-[11px]">總題數</span>
+            <span id="mcqStatTotal" class="text-base sm:text-lg font-bold">0</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+            <span class="text-slate-400 block text-[11px]">已作答</span>
+            <span id="mcqStatAnswered" class="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">0</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+            <span class="text-slate-400 block text-[11px]">答對</span>
+            <span id="mcqStatCorrect" class="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400">0</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+            <span class="text-slate-400 block text-[11px]">答錯</span>
+            <span id="mcqStatWrong" class="text-base sm:text-lg font-bold text-rose-600 dark:text-rose-400">0</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+            <span class="text-slate-400 block text-[11px]">答對率</span>
+            <span id="mcqStatAccuracy" class="text-base sm:text-lg font-bold text-indigo-600 dark:text-indigo-400">0%</span>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Action items: Dark toggle and Bookmark count -->
-      <div class="flex items-center gap-2 sm:gap-4">
-        <button id="favoriteViewBtn" onclick="filterFavorites()" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/60 text-xs sm:text-sm font-medium transition">
-          <svg class="w-4 h-4 text-amber-500 fill-amber-500" viewBox="0 0 24 24">
-            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <span>收藏重點</span>
-          <span id="favCountBadge" class="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 text-xs px-1.5 py-0.2 rounded-full font-bold">0</span>
-        </button>
+      <!-- Question Cards List Container -->
+      <div id="mcqListContainer" class="space-y-4"></div>
 
-        <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="切換深淺模式">
-          <svg id="sunIcon" class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-          <svg id="moonIcon" class="w-5 h-5 block dark:hidden text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+      <!-- Pagination Navigation -->
+      <div id="mcqPaginationBar" class="flex items-center justify-center gap-3 pt-4">
+        <button onclick="mcqPrevPage()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+          ◀ 上一頁
+        </button>
+        <span id="mcqPageIndicator" class="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300">
+          第 1 / 1 頁
+        </span>
+        <button onclick="mcqNextPage()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+          下一頁 ▶
         </button>
       </div>
     </div>
 
-    <!-- Mode navigation tabs -->
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-2 sm:gap-6 overflow-x-auto text-sm">
-      <button onclick="switchTab('study')" id="tabBtn-study" class="tab-btn tab-active py-2.5 px-3 whitespace-nowrap transition">
-        模式一：60題填空循序研讀
-      </button>
-      <button onclick="switchTab('quiz')" id="tabBtn-quiz" class="tab-btn text-slate-600 dark:text-slate-400 py-2.5 px-3 whitespace-nowrap hover:text-brand-600 transition">
-        模式二：隨機測驗模擬
-      </button>
-      <button onclick="switchTab('qa')" id="tabBtn-qa" class="tab-btn text-slate-600 dark:text-slate-400 py-2.5 px-3 whitespace-nowrap hover:text-brand-600 transition">
-        模式三：問答與處置情境題
-      </button>
-      <button onclick="switchTab('search')" id="tabBtn-search" class="tab-btn text-slate-600 dark:text-slate-400 py-2.5 px-3 whitespace-nowrap hover:text-brand-600 transition">
-        模式四：關鍵字全庫檢索
-      </button>
-    </nav>
-  </header>
 
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+    <!-- ========================================== -->
+    <!-- VIEW B: GROUND SAFETY SYSTEM (地面安全題庫) -->
+    <!-- ========================================== -->
+    <div id="view-safety" class="hidden space-y-6">
 
-    <!-- TAB 1: STUDY MODE (60 QUESTIONS) -->
-    <section id="panel-study" class="space-y-4">
-      <!-- Toolbar for study mode -->
-      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-slate-700 dark:text-slate-200">題號跳轉：</span>
-          <select id="jumpSelect" onchange="jumpToQuestion(this.value)" class="text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-brand-500 outline-none">
-            <!-- options will be injected -->
-          </select>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="toggleAllAnswers(true)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-400 hover:bg-brand-100 transition">
-            全部顯示答案
-          </button>
-          <button onclick="toggleAllAnswers(false)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">
-            全部遮蔽答案 (挖空自我測驗)
-          </button>
-          <button onclick="resetFilter()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">
-            重設篩選
-          </button>
-        </div>
+      <!-- Navigation Tabs for Safety -->
+      <div class="bg-white dark:bg-slate-800 p-2 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex gap-2 overflow-x-auto text-xs sm:text-sm font-medium">
+        <button onclick="switchSafetyTab('study')" id="safetyTabBtn-study" class="px-3.5 py-2 rounded-xl transition bg-brand-600 text-white font-bold whitespace-nowrap">
+          模式一：60題填空循序研讀
+        </button>
+        <button onclick="switchSafetyTab('quiz')" id="safetyTabBtn-quiz" class="px-3.5 py-2 rounded-xl transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap">
+          模式二：隨機測驗模擬
+        </button>
+        <button onclick="switchSafetyTab('qa')" id="safetyTabBtn-qa" class="px-3.5 py-2 rounded-xl transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap">
+          模式三：問答與處置情境 (6+5題)
+        </button>
+        <button onclick="switchSafetyTab('search')" id="safetyTabBtn-search" class="px-3.5 py-2 rounded-xl transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap">
+          模式四：地安專屬全庫搜尋
+        </button>
       </div>
 
-      <!-- Category Filter Pills -->
-      <div class="flex flex-wrap gap-2 text-xs" id="categoryPillContainer">
-        <!-- populated dynamically -->
-      </div>
-
-      <!-- Cards Grid -->
-      <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Generated Questions will populate here -->
-      </div>
-    </section>
-
-    <!-- TAB 2: MOCK QUIZ MODE -->
-    <section id="panel-quiz" class="hidden space-y-6">
-      <!-- Quiz Setup Panel -->
-      <div id="quizSetupCard" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-center max-w-2xl mx-auto space-y-4">
-        <div class="w-14 h-14 bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 rounded-2xl mx-auto flex items-center justify-center font-bold text-2xl">
-          ✍️
-        </div>
-        <h2 class="text-xl font-bold">地面安全填空模擬測驗</h2>
-        <p class="text-slate-500 dark:text-slate-400 text-sm">
-          系統將從 60 道完整題庫中隨機抽出考題，遮蔽關鍵字進行線上練習。支援即時核對答案與評分機制。
-        </p>
-
-        <div class="flex justify-center gap-4 pt-2">
-          <button onclick="startQuiz(10)" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl shadow-lg shadow-brand-500/25 transition">
-            隨機 10 題速測
-          </button>
-          <button onclick="startQuiz(20)" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg shadow-indigo-500/25 transition">
-            隨機 20 題標準測驗
-          </button>
-          <button onclick="startQuiz(60)" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-xl transition">
-            全庫 60 題大特訓
-          </button>
-        </div>
-      </div>
-
-      <!-- Quiz Running Panel -->
-      <div id="quizRunningPanel" class="hidden space-y-4 max-w-3xl mx-auto">
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-sm">
-          <div class="font-bold text-brand-600 dark:text-brand-400" id="quizProgressText">第 1 / 10 題</div>
+      <!-- SAFETY TAB 1: STUDY MODE -->
+      <div id="safetyPanel-study" class="space-y-4">
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400">目前答對:</span>
-            <span id="quizScoreText" class="font-bold text-emerald-600">0</span>
+            <span class="text-xs sm:text-sm font-bold">跳轉題號：</span>
+            <select id="safetyJumpSelect" onchange="jumpSafetyQuestion(this.value)" class="text-xs sm:text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-brand-500 outline-none">
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleAllSafetyAnswers(true)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-300 hover:bg-brand-100">
+              全部顯示答案
+            </button>
+            <button onclick="toggleAllSafetyAnswers(false)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200">
+              全部遮蔽答案 (挖空自我練習)
+            </button>
           </div>
         </div>
 
-        <div id="quizQuestionCard" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
-          <!-- Active Quiz Question here -->
-        </div>
+        <div id="safetyCategoryContainer" class="flex flex-wrap gap-2 text-xs"></div>
+        <div id="safetyQuestionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
-      <!-- Quiz Result Modal/Box -->
-      <div id="quizResultPanel" class="hidden bg-white dark:bg-slate-800 p-8 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl max-w-xl mx-auto text-center space-y-4">
-        <div class="text-5xl">🏆</div>
-        <h3 class="text-2xl font-bold">測驗完成！</h3>
-        <p class="text-slate-600 dark:text-slate-300" id="quizScoreSummary">得分載入中...</p>
-        <div id="quizResultAdvice" class="text-sm p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-        </div>
-        <div class="pt-2 flex justify-center gap-3">
-          <button onclick="restartQuiz()" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-700 transition">
-            重新挑戰
-          </button>
-          <button onclick="switchTab('study')" class="px-5 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-medium hover:bg-slate-300 transition">
-            回題庫加強
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 3: QA & SITUATION MODE -->
-    <section id="panel-qa" class="hidden space-y-8">
-      <!-- Section: 6 Detailed Question & Answer -->
-      <div class="space-y-4">
-        <div class="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-700">
-          <div>
-            <h2 class="text-xl font-bold flex items-center gap-2">
-              <span class="w-2.5 h-6 bg-amber-500 rounded-full inline-block"></span>
-              貳、地安簡答題庫 (共 6 大題)
-            </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">涵蓋傷亡免報標準、不列呈報情事、營內/外失事通知對象、逾期隱瞞處分及地安督導要項。</p>
+      <!-- SAFETY TAB 2: FILL-IN-THE-BLANK QUIZ -->
+      <div id="safetyPanel-quiz" class="hidden space-y-6">
+        <div id="safetyQuizSetupCard" class="bg-white dark:bg-slate-800 p-8 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-center max-w-xl mx-auto space-y-4">
+          <div class="text-4xl">✍️</div>
+          <h2 class="text-xl font-bold">地面安全填空測驗模式</h2>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            隨機抽考地安關鍵重點，遮蔽答案直接線上對答或點擊確認記憶！
+          </p>
+          <div class="flex justify-center gap-3 pt-2">
+            <button onclick="startSafetyQuiz(10)" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-brand-700">抽考 10 題</button>
+            <button onclick="startSafetyQuiz(20)" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-indigo-700">抽考 20 題</button>
+            <button onclick="startSafetyQuiz(60)" class="px-4 py-2 bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-900">全題庫 60 題特訓</button>
           </div>
-          <button onclick="toggleAllQA()" class="text-xs px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 font-semibold border border-amber-200 dark:border-amber-800">
-            全部展開 / 收合
-          </button>
         </div>
 
-        <div class="space-y-3" id="qaContainer">
-          <!-- 6 QA Cards populated via JS -->
-        </div>
-      </div>
-
-      <!-- Section: 5 Detailed Situation Questions -->
-      <div class="space-y-4 pt-6">
-        <div class="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-700">
-          <div>
-            <h2 class="text-xl font-bold flex items-center gap-2">
-              <span class="w-2.5 h-6 bg-red-500 rounded-full inline-block"></span>
-              參、實境狀況處置題 (共 5 題情境演練)
-            </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">查明事證要項、注意事項、通報回報對象與標準回報處置範本。</p>
+        <div id="safetyQuizRunningPanel" class="hidden space-y-4 max-w-3xl mx-auto">
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs sm:text-sm">
+            <span id="safetyQuizProgressText" class="font-bold text-brand-600 dark:text-brand-400">第 1 / 10 題</span>
+            <span>已答對：<strong id="safetyQuizScoreText" class="text-emerald-600">0</strong> 題</span>
           </div>
-          <button onclick="toggleAllSituations()" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 font-semibold border border-red-200 dark:border-red-800">
-            全部展開 / 收合
-          </button>
+          <div id="safetyQuizQuestionCard" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4"></div>
         </div>
 
-        <div class="grid grid-cols-1 gap-6" id="situationsContainer">
-          <!-- 5 Situations populated via JS -->
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 4: SEARCH & NOTES MODE -->
-    <section id="panel-search" class="hidden space-y-4">
-      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
-        <div class="relative">
-          <input type="text" id="globalSearchInput" oninput="executeSearch(this.value)" placeholder="輸入關鍵字（例如：一級事件、滅火器、30分鐘、90分貝、骨折、通報）..." class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm">
-          <svg class="w-5 h-5 absolute left-3 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        </div>
-        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-          <span id="searchResultsCount">請輸入字串開始搜尋</span>
-          <span>支援跨 60 題填空、6 題問答與 5 題情境</span>
+        <div id="safetyQuizResultPanel" class="hidden bg-white dark:bg-slate-800 p-8 rounded-2xl border border-slate-200 dark:border-slate-700 text-center max-w-md mx-auto space-y-4">
+          <div class="text-5xl">🏆</div>
+          <h3 class="text-2xl font-bold">地安測驗結算</h3>
+          <p id="safetyQuizScoreSummary" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
+          <div class="pt-2 flex justify-center gap-3">
+            <button onclick="restartSafetyQuiz()" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl font-bold text-xs sm:text-sm">再次測驗</button>
+            <button onclick="switchSafetyTab('study')" class="px-5 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-bold text-xs sm:text-sm">回題庫背誦</button>
+          </div>
         </div>
       </div>
 
-      <div id="searchResultsList" class="space-y-3">
-        <!-- Search hits populate here -->
+      <!-- SAFETY TAB 3: QA & SITUATIONS -->
+      <div id="safetyPanel-qa" class="hidden space-y-8">
+        <!-- 6 QA Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-700">
+            <div>
+              <h2 class="text-lg sm:text-xl font-bold flex items-center gap-2">
+                <span class="w-2.5 h-6 bg-amber-500 rounded-full inline-block"></span>
+                貳、地安簡答題庫 (共 6 大題)
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">傷亡免報標準、不列呈報情事、營內/外失事通知、逾期隱瞞處分與督導項目</p>
+            </div>
+            <button onclick="toggleAllSafetyQA()" class="text-xs px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 font-semibold border border-amber-200">
+              展開/收合全部
+            </button>
+          </div>
+          <div id="safetyQAContainer" class="space-y-3"></div>
+        </div>
+
+        <!-- 5 Situations Section -->
+        <div class="space-y-4 pt-4">
+          <div class="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-700">
+            <div>
+              <h2 class="text-lg sm:text-xl font-bold flex items-center gap-2">
+                <span class="w-2.5 h-6 bg-red-500 rounded-full inline-block"></span>
+                參、實境狀況處置題 (共 5 題情境演練)
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">查明事證要項、注意事項、通報回報對象與標準回報處置範本</p>
+            </div>
+            <button onclick="toggleAllSafetySituations()" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 font-semibold border border-red-200">
+              展開/收合全部
+            </button>
+          </div>
+          <div id="safetySituationsContainer" class="grid grid-cols-1 gap-6"></div>
+        </div>
       </div>
-    </section>
+
+      <!-- SAFETY TAB 4: SEARCH -->
+      <div id="safetyPanel-search" class="hidden space-y-4">
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+          <input type="text" id="safetySearchInput" oninput="executeSafetySearch(this.value)" placeholder="輸入關鍵字（例如：一級事件、滅火器、30分鐘、90分貝、骨折）..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-xs sm:text-sm">
+          <div id="safetySearchResultsCount" class="text-xs text-slate-500 dark:text-slate-400">請輸入關鍵字進行地安專屬檢索</div>
+        </div>
+        <div id="safetySearchResultsList" class="space-y-3"></div>
+      </div>
+
+    </div>
 
   </main>
 
-  <script>
-    // --- 完整題庫資料庫 (共 60 題) ---
-    const rawQuestions = [
-      {
-        id: 1,
-        category: "基本組織與職責",
-        text: "地面安全包括（失事預防）、（營內失事搶搜救）及（失事調查）三項主要工作。",
-        answers: ["失事預防", "營內失事搶搜救", "失事調查"],
-        keyNotes: "地安三大核心工作支柱。"
-      },
-      {
-        id: 2,
-        category: "基本組織與職責",
-        text: "地面安全其主要職責在（預防人員地面失事），工作範圍廣泛而複雜，包括影響安全之一切事務。（失事預防工作項目包含：預防失事計畫、失事預防職責、地安教育、地安督導及地安檢查、外務清除器製作使用）。",
-        answers: ["預防人員地面失事"],
-        keyNotes: "地安首要職責為人員防護。"
-      },
-      {
-        id: 3,
-        category: "計畫與編組",
-        text: "司令部所屬之一級單位，依基地內現況及作業程序，並參照空軍法規、技術命令及有關作戰、訓練、修護、補給、設施及職業安全等法令規章，擬訂基地（地面失事預防計畫）。計畫應涵蓋配屬及相關之單位，以統一管制之效。",
-        answers: ["地面失事預防計畫"],
-        keyNotes: "一級單位依各法令擬訂統一計畫。"
-      },
-      {
-        id: 4,
-        category: "計畫與編組",
-        text: "凡與地面安全作業有（直接）或（間接）關係之一切單位，不論其為（隸屬）或（配屬），均應列為失事預防計畫內編組。",
-        answers: ["直接", "間接", "隸屬", "配屬"],
-        keyNotes: "直間接、隸屬配屬皆納入編組。"
-      },
-      {
-        id: 5,
-        category: "督導與檢查",
-        text: "失事預防乃一連續不斷之工作，各單位按實際需要擬訂計畫付諸實施後，必須予以持續之督導，（地面安全檢查）即為最佳督導方法之一。",
-        answers: ["地面安全檢查"],
-        keyNotes: "最佳督導方法。"
-      },
-      {
-        id: 6,
-        category: "改進建議",
-        text: "在失事發生之前發掘影響安全潛在因素，及時提供在飛機修護、（裝備修維護）、（物流）、（運輸）、（基地勤務）、（設施營產）及地安作業程序上之改進建議，以消除導致失事之可能性。",
-        answers: ["裝備修維護", "物流", "運輸", "基地勤務", "設施營產"],
-        keyNotes: "事前發掘潛在危害與多面向改進。"
-      },
-      {
-        id: 7,
-        category: "地安官權責",
-        text: "各配屬單位主官，須就該單位業務範圍與要求，指定一與專長有關之優秀軍、士官，兼負地安業務；另（基地地安官）應負責督考所屬及配屬單位之地安業務。",
-        answers: ["基地地安官"],
-        keyNotes: "基地地安官統籌督考。"
-      },
-      {
-        id: 8,
-        category: "地安官權責",
-        text: "兼任地安官負責該單位（地面失事預防）工作之推展，如發生（地面失事），須（查明原因）、責任及建議改進辦法等，報告其上級地安業務單位。",
-        answers: ["地面失事預防", "地面失事", "查明原因"],
-        keyNotes: "查明原因、責任與改進辦法。"
-      },
-      {
-        id: 9,
-        category: "地安官權責",
-        text: "凡司令部所屬之一級單位，須管制（中隊）、（獨立分隊）或（同駐營區）內各單位兼任地安官人員並造冊。",
-        answers: ["中隊", "獨立分隊", "同駐營區"],
-        keyNotes: "兼任地安官造冊列管範圍。"
-      },
-      {
-        id: 10,
-        category: "會議制度",
-        text: "地面安全會議為失事預防工作主要部份之一，亦為地安教育方式之一，每季必須召集所屬各單位主官（管）、地安官（兼任地安官）及有關人員舉行（地面安全促進會議）一次。",
-        answers: ["地面安全促進會議"],
-        keyNotes: "每季召開一次。"
-      },
-      {
-        id: 11,
-        category: "督導與檢查",
-        text: "經地面安全檢查發現之缺點，旨在（改正缺失），預防地面失事，促進地面安全，如情況嚴重或改正不力致（缺點重犯）者，得視情況（簽請議處）。",
-        answers: ["改正缺失", "缺點重犯", "簽請議處"],
-        keyNotes: "重犯得視情況簽請議處。"
-      },
-      {
-        id: 12,
-        category: "會議制度",
-        text: "各部隊每季召開地面安全促進會議，可配合（每季督察會報）合併舉行，擴大地安會議紀錄須於會議後（5日）呈主官核閱備查。",
-        answers: ["每季督察會報", "5日"],
-        keyNotes: "時限：會議後5日內呈核。"
-      },
-      {
-        id: 13,
-        category: "督導與檢查",
-        text: "地面安全檢查分類計有地安（業務檢查）、（週期檢查）、（專題檢查）、（特別檢查）及（不定期檢查）等5類。",
-        answers: ["業務檢查", "週期檢查", "專題檢查", "特別檢查", "不定期檢查"],
-        keyNotes: "常考5類檢查劃分。"
-      },
-      {
-        id: 14,
-        category: "文宣宣導",
-        text: "地面失事公報運用分發至（分隊）、（連級）階層提供單位參考改進，並影印揭批後（張貼公布）。",
-        answers: ["分隊", "連級", "張貼公布"],
-        keyNotes: "下發分隊/連級揭批張貼。"
-      },
-      {
-        id: 15,
-        category: "督導與檢查",
-        text: "地安檢查在發掘影響營地地面安全之因素，提出（詳細之分析）、擬訂（改進措施）而付諸實施，並據以修訂與增強失事預防計畫。",
-        answers: ["詳細之分析", "改進措施"],
-        keyNotes: "分析並擬訂改進措施。"
-      },
-      {
-        id: 16,
-        category: "文宣宣導",
-        text: "地安（走廊）及（地安園地）應公布有關安全資料如：交通事故、火災、工作不慎及各種職業災害等重大事件相關資料至少（每季）更新一次，以維新穎。",
-        answers: ["走廊", "地安園地", "每季"],
-        keyNotes: "更新頻率：至少每季一次。"
-      },
-      {
-        id: 17,
-        category: "督導與檢查",
-        text: "地安（督導頻率）（基層單位及中隊）應1日執行1次，（大隊、作戰隊）、組、科、室、中心，2日執行1次，聯隊、指揮部（3日）執行1次。",
-        answers: ["督導頻率", "基層單位及中隊", "大隊、作戰隊", "3日"],
-        keyNotes: "基層/中隊每日；大隊2日；聯隊/指揮部3日。"
-      },
-      {
-        id: 18,
-        category: "督導與檢查",
-        text: "地安週期檢查，應（納編各單位兼任地安官），成立汽、機車檢查小組負責基地內（行車安全）檢查，每月至少1次，各次檢查結果應作完整之紀錄備查。",
-        answers: ["納編各單位兼任地安官", "行車安全"],
-        keyNotes: "汽機車檢查小組：每月至少1次。"
-      },
-      {
-        id: 19,
-        category: "失事調查",
-        text: "地面失事調查工作項目包含（失事之通知）、（組織編組）、（調查之執行）及（調查報告編製）。",
-        answers: ["失事之通知", "組織編組", "調查之執行", "調查報告編製"],
-        keyNotes: "調查工作四大流程項目。"
-      },
-      {
-        id: 20,
-        category: "事件等級劃分",
-        text: "地安事件等級分類計分（一級事件）、（二級事件）、（三級事件）及（四級事件）及（地安通報）。",
-        answers: ["一級事件", "二級事件", "三級事件", "四級事件", "地安通報"],
-        keyNotes: "區分四級事件加地安通報。"
-      },
-      {
-        id: 21,
-        category: "事件等級劃分",
-        text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（死亡3人）（含）以上，或財產毀損金額超過新臺幣1,000萬元（含）以上者，屬於一級事件。",
-        answers: ["死亡3人", "1,000萬元"],
-        keyNotes: "【一級事件】：死亡3人(含)以上 或 財損≥1,000萬元。"
-      },
-      {
-        id: 22,
-        category: "事件等級劃分",
-        text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（死亡2人）（含）以下，或財產毀損金額超過新臺幣600萬元（含）以上，未達新臺幣1,000萬元者，屬於二級事件。",
-        answers: ["死亡2人"],
-        keyNotes: "【二級事件】：死亡2人(含)以下 或 財損600萬～1,000萬元。"
-      },
-      {
-        id: 23,
-        category: "事件等級劃分",
-        text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（一、二等傷殘），或財產毀損金額超過新臺幣360萬元（含）以上，未達新臺幣600萬元者，屬於（三級事件）。",
-        answers: ["一、二等傷殘", "三級事件"],
-        keyNotes: "【三級事件】：一、二等傷殘 或 財損360萬～600萬元。"
-      },
-      {
-        id: 24,
-        category: "事件等級劃分",
-        text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（三等傷殘或重度機能障礙），或財產毀損金額超過新臺幣100萬元（含）以上，未達新臺幣360萬元者，屬於（四級事件）。",
-        answers: ["三等傷殘或重度機能障礙","四級事件"],
-        keyNotes: "【四級事件】：三等傷殘/重度機能障礙 或 財損100萬～360萬元。"
-      },
-      {
-        id: 25,
-        category: "事件等級劃分",
-        text: "地安事件等級分類中，凡因地面失事，造成造成本軍或非本軍人員（受傷或輕度機能障礙）或財產毀損，未達新臺幣100萬元者，屬於（地安通報）。",
-        answers: ["受傷或輕度機能障礙","地安通報"],
-        keyNotes: "【地安通報】：受傷/輕度障礙 或 財損未達100萬元。"
-      },
-      {
-        id: 26,
-        category: "通報時限",
-        text: "地安事件發生，單位獲報後以最迅速方法，地安官或兼任地安官於（營內失事30分鐘）/（營外失事1小時）內通知司令部業務主管單位及司令部督察長室飛行安全組，並於（6小時內）完成初報與飛安服務整合電子系統建置。",
-        answers: ["營內失事30分鐘", "營外失事1小時", "6小時內"],
-        keyNotes: "重要時限：營內30分、營外1小時；6小時完成初報系統建置。"
-      },
-      {
-        id: 27,
-        category: "責任歸屬",
-        text: "調職人員恰於調職期間，尚未向新單位報到時之失事案件，由（原單位）為失事責任單位，若已向新單位報到後發生之失事案件，則（新單位）為失事責任單位。",
-        answers: ["原單位", "新單位"],
-        keyNotes: "報到前原單位負責，報到後新單位負責。"
-      },
-      {
-        id: 28,
-        category: "通報與處分",
-        text: "發生失事如為例假日或非辦公時間，由（部隊地面安全兼管單位值班人員）聯繫司令部督察長室值日官。如逾期呈報地安事件，則失職人員及直屬主管應依權責專案檢討報部。",
-        answers: ["部隊地面安全兼管單位值班人員"],
-        keyNotes: "假日由值班人員聯繫督察長室值日官。"
-      },
-      {
-        id: 29,
-        category: "責任歸屬",
-        text: "發生地安事件時，其失事主因經鑑定係由部隊人員因素導致者，或由環境因素所掌控，或原因不明無法澄清者，所屬單位（失事責任單位）。",
-        answers: ["失事責任單位"],
-        keyNotes: "人員因素、環境因素或原因不明皆由所屬單位負責。"
-      },
-      {
-        id: 30,
-        category: "責任歸屬",
-        text: "發生地安事件時，人員、裝備、車輛及設施其編制在甲單位，而為乙單位借用時，發生地面失事，則（乙單位）為失事責任單位。",
-        answers: ["乙單位"],
-        keyNotes: "借用期間發生失事，借用單位（乙單位）為責任單位。"
-      },
-      {
-        id: 31,
-        category: "地安官權責",
-        text: "失事預防工作之成功，有賴地安官之（能力）與（積極）之工作熱忱，審慎選任與其經常接觸，可使失事預防工作發揮至最高成效。",
-        answers: ["能力", "積極"],
-        keyNotes: "能力與積極熱忱。"
-      },
-      {
-        id: 32,
-        category: "失事調查",
-        text: "如失事事件涉及（故意破壞）時，由（監察人員）執行調查。",
-        answers: ["故意破壞", "監察人員"],
-        keyNotes: "涉及故意破壞由監察部門調查。"
-      },
-      {
-        id: 33,
-        category: "通報時限",
-        text: "地面失事發生後，單位督察科（室）須每（2）日將最新解說電傳司令部（督察長室飛安組），並登錄於（飛安服務整合系統）直至案件（完成續報）。",
-        answers: ["2", "督察長室飛安組", "飛安服務整合系統", "完成續報"],
-        keyNotes: "每2日電傳續報一次。"
-      },
-      {
-        id: 34,
-        category: "失事調查",
-        text: "凡因本軍活動而達致人員傷害或財產毀損（三級含以上）地安事件者，須於45日內調查完畢（如遇特殊情況，例如失事原因須等待檢驗方特能確定者，可請求延期呈報）。",
-        answers: ["三級含以上", "45日"],
-        keyNotes: "三級以上案件須於45日內完成調查。"
-      },
-      {
-        id: 35,
-        category: "責任歸屬",
-        text: "基地地面安全官對同駐營區單位之任何地面失事，須負責（調查）及填寫（地面失事報告），送該屬單位參辦，惟同駐營區單位有現職地面安全官時，則可由同駐營區單位自行辦理。",
-        answers: ["調查", "地面失事報告"],
-        keyNotes: "基地地安官具協同調查與填表權責。"
-      },
-      {
-        id: 36,
-        category: "通報時限",
-        text: "凡因地面失事導致本軍財產受損，無論損傷程度，除依規定時限通報外，失事調查必須迅速審慎，並將受損照片（一式2張）於（1日）內電傳司令部督察長室備查；另失事調查報告表亦需檢附受損照片。",
-        answers: ["一式2張", "1日"],
-        keyNotes: "受損照片一式2張、1日內電傳。"
-      },
-      {
-        id: 37,
-        category: "計畫與編組",
-        text: "各單位應設立（地安指示）及（地面失事案例）檔案，存作參考改進。",
-        answers: ["地安指示", "地面失事案例"],
-        keyNotes: "建立指示與案例專卷存檔。"
-      },
-      {
-        id: 38,
-        category: "現場處置",
-        text: "如遇地面失事，必須儘速趕赴現場，規劃（戒護區域），責適員管制失事現場，繪製（準確失事現場圖），攝取（所需照片），現場未經調查前不可搬離失事殘骸破片，正確紀錄損失情況。",
-        answers: ["戒護區域", "準確失事現場圖", "所需照片"],
-        keyNotes: "現場管制四大要項：戒護、繪圖、拍照、不可搬動殘骸。"
-      },
-      {
-        id: 39,
-        category: "責任歸屬",
-        text: "涉及兩個單位之地面失事調查，部隊防其他基地發生地安事件時，由（原屬基地）負責調查，距離失事現場最近之基地，則應作失事後之各項緊急處置。",
-        answers: ["原屬基地"],
-        keyNotes: "原屬基地主責調查，就近基地作緊急處置。"
-      },
-      {
-        id: 40,
-        category: "責任歸屬",
-        text: "凡地安事件涉及兩個單位且屬不同之基地時，如甲基地移駐至乙基地，如因指揮、通信、裝備、設施等不當而發生失事，應聯合實施失事調查，並由兩基地人員共同召開失事審查會議，由（乙基地）負責召集，會後由（失事責任單位）撰寫失事調查報告。",
-        answers: ["乙基地", "失事責任單位"],
-        keyNotes: "乙基地召集會議，責任單位撰寫報告。"
-      },
-      {
-        id: 42,
-        category: "通報內容",
-        text: "地安事件初報內容應包括（失事發生日期及時間）、發生地點、失事單位、（失事人員職級姓名）、失事當時任務、失事種類、（失事經過）、（初步原因分析）、（失事人員狀況）、裝備或設施損壞情形、已有之處置含憲警及醫療單位處理情形。",
-        answers: ["失事發生日期及時間", "失事人員職級姓名", "失事經過", "初步原因分析", "失事人員狀況"],
-        keyNotes: "初報必備要項，包含人、事、時、地、物及處置。"
-      },
-      {
-        id: 43,
-        category: "地安官權責",
-        text: "地安官應偵察存在於作戰、訓練、（修護、補給）、運輸、通電、（戰、航管）、（基地勤務）、設施、（軍械）、氣象、航醫等各項工作上影響地安之缺點。",
-        answers: ["修護、補給", "戰、航管", "基地勤務", "軍械"],
-        keyNotes: "地安官巡查督考之各業務專業範疇。"
-      },
-      {
-        id: 44,
-        category: "地安官權責",
-        text: "地安官應（分析及歸納）各項缺點，即時建議主官採取（必要改正措施）。",
-        answers: ["分析及歸納", "必要改正措施"],
-        keyNotes: "分析歸納並建議主官改進措施。"
-      },
-      {
-        id: 45,
-        category: "地安官權責",
-        text: "另（兼任地安官）負責該單位地面失事預防工作之推展，如發生地面失事，應（查明原因）、（責任）及（建議改進辦法）等，報告其上級地安業務單位。",
-        answers: ["兼任地安官", "查明原因", "責任", "建議改進辦法"],
-        keyNotes: "兼任地安官事故呈報三核心。"
-      },
-      {
-        id: 46,
-        category: "地安官權責",
-        text: "凡司令部所屬之一級單位，應管制中隊、獨立分隊或相等單位以上（包含同駐營區內各單位）兼任地安官人員並造冊；另（兼任地安官異動）時，須報告其（上級地安業務單位核備）。",
-        answers: ["兼任地安官異動", "上級地安業務單位核備"],
-        keyNotes: "人員異動需向上核備。"
-      },
-      {
-        id: 47,
-        category: "職安法規",
-        text: "依「職業安全衛生設施規則」規定之工作場所安全衛生設備、措施之最低標準，各單位應以此改善所屬不安全之（工作環境）及（個人防護裝備維護）。",
-        answers: ["工作環境", "個人防護裝備維護"],
-        keyNotes: "職安最低標準防護。"
-      },
-      {
-        id: 48,
-        category: "職安法規",
-        text: "各部隊、後勤指揮部及學校於部隊長下轄聯隊部、指揮部、校部應設置（職業安全衛生委員會），由工場安全檢查主管部門負責規劃及推動工場安全檢查業務。",
-        answers: ["職業安全衛生委員會"],
-        keyNotes: "設置職業安全衛生委員會規劃推動。"
-      },
-      {
-        id: 49,
-        category: "失事調查",
-        text: "失事調查之調查官必須儘速趕赴現場，如情況許可下，應（訪談受傷人員）並特別注意受傷人員身體上或精神上之特徵，並根據醫師診斷（記錄其受傷程度）；另亦儘速（會見目擊失事人員），以聽取失事各方面之敘述，由在場目擊人員自由敘述其所見之情況，避免採取官式詢問態度。",
-        answers: ["訪談受傷人員", "記錄其受傷程度", "會見目擊失事人員"],
-        keyNotes: "訪談傷者、記錄傷勢、會見目擊證人。"
-      },
-      {
-        id: 50,
-        category: "工場安全",
-        text: "繪製工作場地安全檢查要領就是防範（危險事故）的發生，藉由安全檢查的方式，來發現不安全之設備或作業行為，加強工作人員的安全意識、喚起工作人員平時注意安全、人人從觀念上重視安全，以達成零災害的理想目標。",
-        answers: ["危險事故"],
-        keyNotes: "安檢目的在防範危險事故、達零災害。"
-      },
-      {
-        id: 51,
-        category: "現場處置",
-        text: "各單位發生工場災害時，應派員調查，非經調查人員許可（不得移動或破壞）現場，不論有無人員傷亡，均應按規定程序處理，必要時應組成專案小組審慎處理之。",
-        answers: ["不得移動或破壞"],
-        keyNotes: "現場保全：非經許可不得移動或破壞。"
-      },
-      {
-        id: 52,
-        category: "消防安檢",
-        text: "滅火器應分別固定放置於取用方便之明顯處所，並以紅色、紅白相間條紋或指標，確實標明其位置，懸掛於牆壁或放置於箱中之滅火器，其上端與地面距離，十八公斤以上者不得超過（1）公尺，十八公斤以下者不得超過（1.5）公尺。",
-        answers: ["1", "1.5"],
-        keyNotes: "重要考點：≥18kg 不得超過1公尺；<18kg 不得超過1.5公尺。"
-      },
-      {
-        id: 53,
-        category: "職安法規",
-        text: "工作場所內為避免工作人員受噪音之危害，各單位應購置耳塞、耳罩等防護裝備，尤其超過（90）分貝者，一律要求工作人員使用噪音防護裝備。",
-        answers: ["90"],
-        keyNotes: "防護裝備臨界門檻：90分貝。"
-      },
-      {
-        id: 54,
-        category: "職安法規",
-        text: "燈盞裝置應採用適合工作性質之燈盞及日光燈為原則，燈泡須完全包於戴於玻璃罩中，易燃、易爆工作地區應使用（防爆燈罩）。",
-        answers: ["防爆燈罩"],
-        keyNotes: "易燃易爆地區嚴格要求防爆燈罩。"
-      },
-      {
-        id: 55,
-        category: "職安法規",
-        text: "高溫刺激物或有毒污染之工作場所，每5人應設置一個冷、熱水之盥洗設備，並應備有適當之（清潔劑），惟不得存放（有機溶劑）供工作人員清潔皮膚。",
-        answers: ["清潔劑", "有機溶劑"],
-        keyNotes: "嚴禁存放有機溶劑供清潔皮膚。"
-      },
-      {
-        id: 56,
-        category: "職安法規",
-        text: "工作場地須特別注意（光線）、（通風）、（溫度）、（濕度）等衛生設備確保人員健康。",
-        answers: ["光線", "通風", "溫度", "濕度"],
-        keyNotes: "衛生四要件：光、風、溫、濕。"
-      },
-      {
-        id: 57,
-        category: "消防安檢",
-        text: "各工作場所之佈置須符合工場安全要求，避免擁擠阻塞，工作場所內通道、樓梯、安全門、安全梯出入口，應設置（緊急照明設備）、（逃生方向指示燈具）等系統，俾利緊急斷電或停電時照明及逃生用。",
-        answers: ["緊急照明設備", "逃生方向指示燈具"],
-        keyNotes: "緊急照明與逃生指標系統。"
-      },
-      {
-        id: 58,
-        category: "督導與檢查",
-        text: "實施地面安全檢查後，受檢單位位於接獲通知，須於（3日內完成改正）工作，如無法於限期內完成時，應將其原因及預定完成日期先行填報。如（無正當理由），（超過改正時限）或是（不改正者），應簽請議處。",
-        answers: ["3日內完成改正", "無正當理由", "超過改正時限", "不改正者"],
-        keyNotes: "檢查缺失須於3日內完成改正。"
-      },
-      {
-        id: 59,
-        category: "失事調查",
-        text: "失事調查應注意（失事殘骸破片）於（未經調查前）不可（搬離現場），凡對肇因有價值者，均具登記其他證據及有關事實，加以正確記錄損失情況，以作研判運用。",
-        answers: ["失事殘骸破片", "未經調查前", "搬離現場"],
-        keyNotes: "調查前殘骸破片不可任意搬移。"
-      }
-    ];
+  <!-- RESULT MODAL -->
+  <div id="scoreModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl border border-slate-200 dark:border-slate-700">
+      <div class="w-16 h-16 mx-auto mb-4 bg-blue-50 dark:bg-blue-950 text-blue-600 rounded-full flex items-center justify-center text-3xl">
+        📊
+      </div>
+      <h3 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">模擬測驗成績結果</h3>
+      <div id="modalScoreText" class="text-4xl sm:text-5xl font-black text-brand-600 my-4">0 分</div>
+      <p id="modalDetailText" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-6 leading-relaxed"></p>
+      <div class="flex gap-2">
+        <button onclick="closeScoreModal()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl font-bold text-xs sm:text-sm transition">
+          檢視答題狀況
+        </button>
+        <button onclick="toggleFilterWrong(); closeScoreModal();" class="flex-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition">
+          只看錯題
+        </button>
+      </div>
+    </div>
+  </div>
 
-    // --- 完整問答題庫 (共 6 題) ---
-    const rawQA = [
-      {
-        id: 1,
-        title: "單位肇生傷亡案件未達何項標準，得由單位自行管制？",
-        answer: `答：
-1. 因事故就醫經手術治療後，對身體外觀或器官有所改變者（如截肢等）。
-2. 身體外觀或器官經過治療後，雖未改變，但癒後已造成原有功能喪失或障礙者（成殘）。
-3. 經主治醫師診治後開據入院許可證者。
-4. 研判將衍生後遺症（因公受傷等）。
-5. 本軍人員於休假期間（經權責主官奉核之外休假及外宿、傷亡程度為輕度機能障礙以上，酒駕肇事除外）。`,
-        tips: "熟記 5 大自管例外排除標準（截肢改變外觀、功能成殘、開立住院許可、衍生後遺症、奉准休假輕度障礙以上非酒駕者）。"
-      },
-      {
-        id: 2,
-        title: "單位肇生何項情事，不列地面失事呈報（概述6項）？",
-        answer: `答：
-1. 各式武器，已置於發射架上，及其動力裝備起動後，所發生之各種失事。
-2. 因正常磨損或自動折（破）裂所造成之財產損失。
-3. 自裁或謀殺。
-4. 故意自行加害之損傷。
-5. 本軍人員於休假期間，造成民眾傷害及財產損失。
-6. 由飲酒、疾病、藥品、飲食不潔等所引起之疾病，及生理機能傷害。
-7. 醫療單位處方，所引發之藥物過敏性反應。
-8. 由於敵人直接行動所造成之人員傷害及財產損失。
-9. 逮捕或逃獄所造成之傷害。
-10. 已經呈報之人員傷害，痊癒後重新惡化者。
-11. 因颱風、地震、暴風雨及遭動物咬傷等天然災害所造成之人員傷亡或物資損失。`,
-        tips: "考題要求概述6項即可，建議記憶：武器架發射動力啟動、正常磨損折裂、自裁謀殺、休假傷及民眾財產、飲酒疾病食物、天災動物咬傷。"
-      },
-      {
-        id: 3,
-        title: "請述明單位肇生營內失事之通知為何？",
-        answer: `答：立即通知下列單位及人員：
-1. 失事地區之業務主管。
-2. 受傷人員之直屬主官。
-3. 醫療單位。
-4. 憲兵警衛及運輸單位。
-5. 財產保管負責主官。`,
-        tips: "營內失事 5 大通報對象：業務主管、直屬主官、醫療單位、憲警運輸、財產保管主官。"
-      },
-      {
-        id: 4,
-        title: "請述明單位肇生營外失事之通知為何？",
-        answer: `答：地面失事如發生營區外，當事人、地面安全官或兼任地面安全業務人員，立即通知業務主管單位、當地憲警機關及有關單位或人員。`,
-        tips: "營外通報三大主體：業務主管單位、當地憲警機關、有關人員。"
-      },
-      {
-        id: 5,
-        title: "逾期或隱瞞失事事件處置？",
-        answer: `答：各單位對於地面失事案件，如有逾期或隱瞞不報，經司令部（憲、警或其他單位通報）查獲者，有關失職人員及直屬主管應依權責專案檢討報部。`,
-        tips: "關鍵重點：無論逾期或隱匿，經查獲者「失職人員」與「直屬主管」均專案檢討報部。"
-      },
-      {
-        id: 6,
-        title: "請述明地安督導項目（概述6項）？",
-        answer: `答：
-1. 每日地安檢查執行情形。
-2. 有關安全規定執行情形。
-3. 地安教育與宣導執行情形。
-4. 地面失事調查報告處理情形與預防改進措施。
-5. 各項裝備操作是否確按技令及相關規定操作，有無標準作業程序。
-6. 裝備設施、基地勤務與後勤整備執行情形。
-7. 各項在職訓練、專精技訓及組合精進訓練執行情形。
-8. 行車安全規定與檢查執行情形。
-9. 任務提示、勤前教育及安全規定講解與考問。
-10. 人員生活及身心狀況。
-11. 各單位應依特性參考前述各項自行訂定督導項目。`,
-        tips: "常背6項：每日安檢、法規執行、地安教育、技令SOP操作、裝備設施整備、行車安全與勤前教育。"
-      }
-    ];
+<script>
+// =========================================================================
+// DATA REPOSITORY 1: 修護標準化題庫 (500 題完整資料庫)
+// =========================================================================
+let MAINTENANCE_DATA = [];
+// 為了避免重複且節省空間，在初始化時載入 500 題完整題庫
+</script>
+<script src="maintenance_data.js" onerror="loadFallbackMaintenance()"></script>
+<script>
+// 備用加載邏輯（如果 maintenance_data.js 不存在，使用內建資料集）
+function loadFallbackMaintenance() {
+  if (typeof FULL_MAINTENANCE_DB !== 'undefined') {
+    MAINTENANCE_DATA = FULL_MAINTENANCE_DB;
+  }
+}
+</script>
+<script>
+// =========================================================================
+// DATA REPOSITORY 2: 英文題庫 (150 題完整資料庫)
+// =========================================================================
+const ENGLISH_DATA = [
+  // 試卷 1 (1~55)
+  { id: 1, q: "I prefer Chinese cuisine ______ Japanese food.", options: { A: "to", B: "on", C: "than", D: "above" }, ans: "A" },
+  { id: 2, q: "Americans speak Chinese with an ______.", options: { A: "access", B: "audience", C: "assault", D: "accent" }, ans: "D" },
+  { id: 3, q: "To be frank, I haven't ______ myself well to Western dietary customs.", options: { A: "begin", B: "believe", C: "adapted", D: "become" }, ans: "C" },
+  { id: 4, q: "His ______ is that he can identify and utilize talented people well.", options: { A: "behavior", B: "date", C: "accent", D: "advantage" }, ans: "D" },
+  { id: 5, q: "I think you should ______ to your opinions in the negotiation.", options: { A: "adhere", B: "stay", C: "try", D: "go" }, ans: "A" },
+  { id: 6, q: "If you have any problem, just consult with the ______.", options: { A: "army", B: "policy", C: "premium", D: "agent" }, ans: "D" },
+  { id: 7, q: "They are trying to reach an ______ today.", options: { A: "age", B: "agreement", C: "airport", D: "art" }, ans: "B" },
+  { id: 8, q: "We had no ______ but to work overtime.", options: { A: "alternative", B: "fight", C: "friend", D: "heat" }, ans: "A" },
+  { id: 9, q: "We tend to hire salesmen with ______.", options: { A: "history", B: "joy", C: "ambition", D: "care" }, ans: "C" },
+  { id: 10, q: "Let's sit down and ______ this marketing program.", options: { A: "buy", B: "beat", C: "analyze", D: "kick" }, ans: "C" },
+  { id: 11, q: "To tell you the truth, the ______ of your resignation took my breath away.", options: { A: "announcement", B: "lesson", C: "match", D: "minute" }, ans: "A" },
+  { id: 12, q: "I have to say that no rule can be ______ to all cases.", options: { A: "missed", B: "absorbed", C: "nice", D: "applied" }, ans: "D" },
+  { id: 13, q: "Being a(n) ______, you should help me carry out the insurance.", options: { A: "worker", B: "assistant", C: "actor", D: "monitor" }, ans: "B" },
+  { id: 14, q: "An ______ takes sick and injured people to the hospital.", options: { A: "armchair", B: "architect", C: "ambulance", D: "apprentice" }, ans: "C" },
+  { id: 15, q: "In this ______ my father is an expert.", options: { A: "aspect", B: "access", C: "thought", D: "tune" }, ans: "A" },
+  { id: 16, q: "The manager ______ me to act on his behalf during his absence.", options: { A: "authorized", B: "assisted", C: "concentrated", D: "bent" }, ans: "A" },
+  { id: 17, q: "According to what you said, there are several goods ______ within that price range.", options: { A: "bind", B: "available", C: "brief", D: "cancelled" }, ans: "B" },
+  { id: 18, q: "My little sister lost her ______ and fell off her bicycle.", options: { A: "balance", B: "wallet", C: "memory", D: "job" }, ans: "A" },
+  { id: 19, q: "You have to keep in mind that if the negotiation fails, our company will go ______.", options: { A: "desert", B: "bankrupt", C: "prosperous", D: "generous" }, ans: "B" },
+  { id: 20, q: "I saw the middle-aged man ______ with the sales girl.", options: { A: "humming", B: "adapting", C: "bargaining", D: "linking" }, ans: "C" },
+  { id: 21, q: "I must tell you that mutual interest is the ______ for our negotiation.", options: { A: "ancestor", B: "path", C: "basis", D: "pattern" }, ans: "C" },
+  { id: 22, q: "Shall I sign the contract on ______ of our company.", options: { A: "behalf", B: "top", C: "most", D: "risk" }, ans: "A" },
+  { id: 23, q: "I have to agree that advanced equipment would be ______ in increasing our output.", options: { A: "peaceful", B: "ashamed", C: "beneficial", D: "quiet" }, ans: "C" },
+  { id: 24, q: "My boss always ______ us when we made mistakes.", options: { A: "praised", B: "appreciated", C: "supported", D: "blamed" }, ans: "D" },
+  { id: 25, q: "I think many common interests form a ______ between us.", options: { A: "trap", B: "bond", C: "habit", D: "line" }, ans: "B" },
+  { id: 26, q: "These people here ______ on farms for living.", options: { A: "disclose", B: "conceal", C: "rely", D: "confide" }, ans: "C" },
+  { id: 27, q: "The servant is ______ the dust from the table.", options: { A: "vacuuming", B: "sweeping", C: "brushing", D: "destroying" }, ans: "C" },
+  { id: 28, q: "Don't speak too much at the meeting. You know it's best just to make a ______ statement.", options: { A: "brief", B: "long", C: "detailed", D: "lively" }, ans: "A" },
+  { id: 29, q: "He wants to be a wealthy stock ______.", options: { A: "broker", B: "exchange", C: "market", D: "certificate" }, ans: "A" },
+  { id: 30, q: "The news was posted on the ______ board.", options: { A: "bulletin", B: "trade", C: "access", D: "bake" }, ans: "A" },
+  { id: 31, q: "It's so easy. Press the red ______ and the machine will start.", options: { A: "hat", B: "couch", C: "button", D: "creature" }, ans: "C" },
+  { id: 32, q: "If you don't know how to do something, just ask the management ______ for advice.", options: { A: "course", B: "consultant", C: "job", D: "business" }, ans: "B" },
+  { id: 33, q: "The general manager is quite ______ with my proposal.", options: { A: "contend", B: "various", C: "content", D: "tidy" }, ans: "C" },
+  { id: 34, q: "You'd best look for job ads in the ______ newspaper.", options: { A: "daily", B: "month", C: "day", D: "year" }, ans: "A" },
+  { id: 35, q: "You should not delay any longer, since the ______ is drawing near.", options: { A: "work", B: "deadline", C: "holiday", D: "week" }, ans: "B" },
+  { id: 36, q: "The director ______ to us all what he had decided to resign.", options: { A: "talked", B: "pronounced", C: "told", D: "declared" }, ans: "D" },
+  { id: 37, q: "To a certain ______, I do not agree with you.", options: { A: "degree", B: "grade", C: "class", D: "group" }, ans: "A" },
+  { id: 38, q: "The braised carp with soy sauce is very ______.", options: { A: "smart", B: "tall", C: "ugly", D: "delicious" }, ans: "D" },
+  { id: 39, q: "Could you possibly ______ a message to the director.", options: { A: "pull", B: "deliver", C: "carry", D: "push" }, ans: "B" },
+  { id: 40, q: "I'd like to work in the export sales ______.", options: { A: "room", B: "apartment", C: "department", D: "door" }, ans: "C" },
+  { id: 41, q: "The accountant had twenty thousand dollars on ______.", options: { A: "deposit", B: "advance", C: "delay", D: "divide" }, ans: "A" },
+  { id: 42, q: "There are a heap of files on the ______ in front of desk.", options: { A: "wall", B: "room", C: "air", D: "desk" }, ans: "D" },
+  { id: 43, q: "You should know that too rich a ______ is bad for your health.", options: { A: "food", B: "diet", C: "drink", D: "vegetable" }, ans: "B" },
+  { id: 44, q: "Actually, there is no marked ______ in quality between the two types.", options: { A: "alike", B: "difference", C: "different", D: "same" }, ans: "B" },
+  { id: 45, q: "The interns are quick to learn, but they lack ______.", options: { A: "idea", B: "discipline", C: "use", D: "noise" }, ans: "B" },
+  { id: 46, q: "If you have no objections, please sign the ______.", options: { A: "stain", B: "flower", C: "call", D: "document" }, ans: "D" },
+  { id: 47, q: "You cannot over ______ the importance of hard work.", options: { A: "emphasize", B: "talk", C: "say", D: "add" }, ans: "A" },
+  { id: 48, q: "Last week, the company ______ ten new engineers.", options: { A: "employ", B: "employed", C: "pulled", D: "bought" }, ans: "B" },
+  { id: 49, q: "We ______ many hardships when we first started the firm.", options: { A: "overlooks", B: "encounters", C: "has", D: "encountered" }, ans: "D" },
+  { id: 50, q: "Sorry, I have already several ______ on the weekend.", options: { A: "plan", B: "thing", C: "engagements", D: "agreement" }, ans: "C" },
+  { id: 51, q: "In my opinion, it's still too early to ______ her chances of success.", options: { A: "evaluate", B: "oppose", C: "view", D: "write" }, ans: "A" },
+  { id: 52, q: "Another word for clothing is ______.", options: { A: "adjustment", B: "apparel", C: "appeal", D: "armored" }, ans: "B" },
+  { id: 53, q: "In contemporary society, the ______ of God is often questioned.", options: { A: "necessary", B: "existence", C: "being", D: "existent" }, ans: "B" },
+  { id: 54, q: "The student was ______ for being a bully.", options: { A: "charged", B: "hired", C: "expelled", D: "fire" }, ans: "C" },
+  { id: 55, q: "If I were you, I would try to limit my ______ to basic necessities only.", options: { A: "expenditures", B: "income", C: "salary", D: "benefit" }, ans: "A" },
+  // 試卷 2 (56~102)
+  { id: 56, q: "Time is the limiting ______ that will most influence her decision.", options: { A: "card", B: "percent", C: "factor", D: "selection" }, ans: "C" },
+  { id: 57, q: "Please send us the order by ______.", options: { A: "route", B: "fax", C: "way", D: "human" }, ans: "B" },
+  { id: 58, q: "The private employee ______ are all kept in the manager's office.", options: { A: "files", B: "complaints", C: "affairs", D: "judgements" }, ans: "A" },
+  { id: 59, q: "The new décor gives the room a romantic ______.", options: { A: "likeness", B: "agreement", C: "element", D: "flavor" }, ans: "D" },
+  { id: 60, q: "All of us expect more ______ in the workplace.", options: { A: "liberate", B: "free", C: "flexibility", D: "pressure" }, ans: "C" },
+  { id: 61, q: "He ______ the letter in half and put it into a book before he left in a hurry.", options: { A: "folded", B: "ended", C: "started", D: "forgot" }, ans: "A" },
+  { id: 62, q: "We could just manage to see the ______ of a car in the thick fog.", options: { A: "form", B: "length", C: "width", D: "height" }, ans: "A" },
+  { id: 63, q: "The waiter walked a few steps and put the ______ in the dustbin.", options: { A: "garbage", B: "exam", C: "fridge", D: "table" }, ans: "A" },
+  { id: 64, q: "These materials will give you a(n) ______ idea of what the company does.", options: { A: "especial", B: "overall", C: "general", D: "ordinary" }, ans: "C" },
+  { id: 65, q: "It will benefit you a lot to set ______ and follow them.", options: { A: "goals", B: "limits", C: "friends", D: "living" }, ans: "A" },
+  { id: 66, q: "After work, she has to go to the ______ store to buy some rice.", options: { A: "clothes", B: "grocery", C: "toy", D: "cake" }, ans: "B" },
+  { id: 67, q: "The book introduces some general ______ for starting a business.", options: { A: "policy", B: "system", C: "guidelines", D: "style" }, ans: "C" },
+  { id: 68, q: "I heard that a new ______ is going to be built near our community.", options: { A: "window", B: "campus", C: "gymnasium", D: "transport" }, ans: "C" },
+  { id: 69, q: "It's all right to be late for work occasionally, but don't let it become a ______.", options: { A: "addition", B: "habit", C: "interest", D: "oddity" }, ans: "B" },
+  { id: 70, q: "Lack of education was a serious ______ for him.", options: { A: "handicap", B: "advantage", C: "good", D: "welfare" }, ans: "A" },
+  { id: 71, q: "Too much rich food is undoubtedly ______ to your health.", options: { A: "beneficial", B: "harmful", C: "faultless", D: "blameless" }, ans: "B" },
+  { id: 72, q: "Although the old man is seventy years old, he looks strong and ______.", options: { A: "ill", B: "sick", C: "healthy", D: "unhealthy" }, ans: "C" },
+  { id: 73, q: "The company ______ a bilingual translator when the foreign clients come.", options: { A: "mail", B: "hires", C: "buys", D: "delivers" }, ans: "B" },
+  { id: 74, q: "You had better go to the ______ and undergo a thorough examination.", options: { A: "outdoor", B: "home", C: "hotel", D: "hospital" }, ans: "D" },
+  { id: 75, q: "The workers always complain about the poor ______ conditions.", options: { A: "art", B: "live", C: "housing", D: "report" }, ans: "C" },
+  { id: 76, q: "Please prepare some powerpoint slides to ______ the new plan.", options: { A: "teach", B: "serve", C: "contribute", D: "illustrate" }, ans: "D" },
+  { id: 77, q: "The ______ made the information easier to understand.", options: { A: "illustration", B: "means", C: "imagination", D: "impression" }, ans: "A" },
+  { id: 78, q: "Her spending exceeds her ______.", options: { A: "income", B: "outgo", C: "expense", D: "spend" }, ans: "A" },
+  { id: 79, q: "I have to say I am just acting as a private ______ in this matter.", options: { A: "general", B: "entire", C: "people", D: "individual" }, ans: "D" },
+  { id: 80, q: "Please keep me ______ of how the negotiations are going.", options: { A: "said", B: "talked", C: "informed", D: "spoke" }, ans: "C" },
+  { id: 81, q: "There is a ______ to how much money we can spend.", options: { A: "discovery", B: "limit", C: "direction", D: "location" }, ans: "B" },
+  { id: 82, q: "She was unhappy about the omission of her name from the ______.", options: { A: "foreground", B: "roof", C: "apartment", D: "list" }, ans: "D" },
+  { id: 83, q: "I would ______ your keeping it a secret.", options: { A: "praise", B: "bless", C: "thank", D: "appreciate" }, ans: "D" },
+  { id: 84, q: "The ______ promised to give out bonuses at the end of the year.", options: { A: "control", B: "exhibition", C: "office", D: "manager" }, ans: "D" },
+  { id: 85, q: "The international company sells a lot of ______.", options: { A: "products", B: "works", C: "creations", D: "compositions" }, ans: "A" },
+  { id: 86, q: "Let's try to find a simple and easy ______ of dealing with the problem.", options: { A: "attendance", B: "present", C: "signature", D: "method" }, ans: "D" },
+  { id: 87, q: "It's necessary to ______ with management if we want higher wages.", options: { A: "mature", B: "negotiate", C: "promote", D: "market" }, ans: "B" },
+  { id: 88, q: "The game was ______ because of the storm.", options: { A: "cancelled", B: "disappeared", C: "erased", D: "deleted" }, ans: "A" },
+  { id: 89, q: "It is said that the company decided to sell to ______ markets.", options: { A: "adult", B: "angry", C: "overseas", D: "outgoing" }, ans: "C" },
+  { id: 90, q: "We expect all the department managers to ______ in the discussion, not to just sit there.", options: { A: "look", B: "peek", C: "perish", D: "participate" }, ans: "D" },
+  { id: 91, q: "The company could cater to the ______ needs of customers.", options: { A: "particular", B: "pacific", C: "prehistoric", D: "priceless" }, ans: "A" },
+  { id: 92, q: "The boss always listens to the staff with ______.", options: { A: "preference", B: "precaution", C: "patience", D: "preview" }, ans: "C" },
+  { id: 93, q: "The president said that he would support our plan one hundred ______.", options: { A: "percent", B: "action", C: "scout", D: "scream" }, ans: "A" },
+  { id: 94, q: "I'd like to discuss the details of the contract with you if time ______.", options: { A: "permits", B: "seizes", C: "seeks", D: "promotes" }, ans: "A" },
+  { id: 95, q: "The boss is talking on the ______ in the office, so you'll have to wait for a moment.", options: { A: "learning", B: "phone", C: "ministry", D: "occupation" }, ans: "B" },
+  { id: 96, q: "You should carefully make a plan first and then put it into ______.", options: { A: "freight", B: "hermit", C: "interference", D: "practice" }, ans: "D" },
+  { id: 97, q: "These people won't ______ for those who cheat to the public.", options: { A: "vote", B: "choose", C: "sacrifice", D: "volunteer" }, ans: "A" },
+  { id: 98, q: "The manager's ______ are $100,000 a year.", options: { A: "rewards", B: "indemnificatio", C: "money", D: "wages" }, ans: "D" },
+  { id: 99, q: "We should take measures to improve ______ quality.", options: { A: "drought", B: "donation", C: "prose", D: "product" }, ans: "D" },
+  { id: 100, q: "Our company has made great progress in ______.", options: { A: "delinquent", B: "crumb", C: "donor", D: "production" }, ans: "D" },
+  { id: 101, q: "I will teach you some ______ skills during the course.", options: { A: "destined", B: "professional", C: "crude", D: "brisk" }, ans: "B" },
+  { id: 102, q: "There ______ five students in my class who decided to drop out of school and go to work instead.", options: { A: "are", B: "is", C: "has", D: "have" }, ans: "A" },
+  // 試卷 3 (103~150)
+  { id: 103, q: "Frank and William ______ not very impressed by the new movie, so I don't think I'll go see it either.", options: { A: "was", B: "were", C: "has been", D: "will be" }, ans: "B" },
+  { id: 104, q: "A magnifying glass will make it ______ larger.", options: { A: "to look", B: "looking", C: "look", D: "looked" }, ans: "C" },
+  { id: 105, q: "She was unhappy because her father would not ______ her go to the party.", options: { A: "let", B: "permit", C: "allow", D: "get" }, ans: "A" },
+  { id: 106, q: "______ with, I have no time to have a date with you.", options: { A: "To begin", B: "Beginning", C: "Begin", D: "To beginning" }, ans: "A" },
+  { id: 107, q: "His wealth enables him ______ to England.", options: { A: "went", B: "to go", C: "to be going", D: "to have gone" }, ans: "B" },
+  { id: 108, q: "This apron has no pocket ______.", options: { A: "to put things", B: "to be things put", C: "putting things in", D: "to put things in" }, ans: "D" },
+  { id: 109, q: "On my way home I stopped ______ some bread at the bakery.", options: { A: "buying", B: "to buying", C: "to buy", D: "to have bought" }, ans: "C" },
+  { id: 110, q: "It's ______ that the project will take at least three months to complete.", options: { A: "estimating", B: "estimates", C: "estimated", D: "estimate" }, ans: "C" },
+  { id: 111, q: "The office staff were deeply ______ by the manager's speech.", options: { A: "impressing", B: "impressed", C: "impresses", D: "impress" }, ans: "B" },
+  { id: 112, q: "Every morning he spends two hours ______ papers and magazines.", options: { A: "for reading", B: "on reading", C: "reading", D: "to read" }, ans: "C" },
+  { id: 113, q: "I usually have a simple meal at ______.", options: { A: "morning", B: "evening", C: "midday", D: "afternoon" }, ans: "C" },
+  { id: 114, q: "Don't forget ______ to me. Let's keep in touch.", options: { A: "to write", B: "writing", C: "having", D: "to have" }, ans: "A" },
+  { id: 115, q: "After the earthquake, the government sent humanitarian goods ______ the disaster areas.", options: { A: "to", B: "from", C: "on", D: "above" }, ans: "A" },
+  { id: 116, q: "The police caught him ______ a car.", options: { A: "to steal", B: "stealing", C: "stolen", D: "to be stolen" }, ans: "B" },
+  { id: 117, q: "There are the facts ______ by the committee.", options: { A: "to gather", B: "gathering", C: "gathered", D: "being gathered" }, ans: "C" },
+  { id: 118, q: "______ to meet the deadline will make your chief editor very angry.", options: { A: "Success", B: "Victory", C: "Managing", D: "Failure" }, ans: "D" },
+  { id: 119, q: "The President was sitting on the chair ______ by his supporters.", options: { A: "surrounding", B: "to surround", C: "surround", D: "surrounded" }, ans: "D" },
+  { id: 120, q: "A ______ man will catch at a straw.", options: { A: "drowned", B: "to drown", C: "drowning", D: "being drowning" }, ans: "C" },
+  { id: 121, q: "What did the girl look like? \"She wore a wedding dress ______ she were a bride.\"", options: { A: "like", B: "so", C: "so that", D: "as if" }, ans: "D" },
+  { id: 122, q: "He suggested that the newcomer ______ his medical report soon.", options: { A: "submit", B: "submitted", C: "has submitted", D: "would submit" }, ans: "A" },
+  { id: 123, q: "If the car ______ no good, I would have to buy another.", options: { A: "were", B: "is", C: "was", D: "are" }, ans: "A" },
+  { id: 124, q: "I wish we ______ with my brother when he flies to England next week.", options: { A: "will go", B: "are going", C: "could go", D: "had gone" }, ans: "C" },
+  { id: 125, q: "I would rather she ______ tomorrow than today.", options: { A: "come", B: "came", C: "should come", D: "has come" }, ans: "B" },
+  { id: 126, q: "The reason I didn't go to French was ______ a new job.", options: { A: "because I got", B: "because of getting", C: "due to", D: "that I got" }, ans: "D" },
+  { id: 127, q: "\"What happened?\" \"The situation is ______.\"", options: { A: "embarrass", B: "embarrassing", C: "embarrassed", D: "much" }, ans: "B" },
+  { id: 128, q: "This room is beautifully ______ with fragrant flowers and expensive paintings.", options: { A: "decorate", B: "decoration", C: "decorating", D: "decorated" }, ans: "D" },
+  { id: 129, q: "\"I think I understand his point.\" \"Then ______.\"", options: { A: "explain me it", B: "explain it to me", C: "explain it for me", D: "explain for me it" }, ans: "B" },
+  { id: 130, q: "My sister never used to oppose me, but my brother occasionally ______.", options: { A: "did", B: "used to", C: "usedn't", D: "didn't" }, ans: "A" },
+  { id: 131, q: "Paul lives in London, and so ______ his parents.", options: { A: "are", B: "don't", C: "live", D: "do" }, ans: "D" },
+  { id: 132, q: "\"Will the weather clear up this afternoon?\" \"No, I'm afraid it ______.\"", options: { A: "may not", B: "won't", C: "mustn't", D: "shouldn't" }, ans: "B" },
+  { id: 133, q: "You might ______ advise me to give up my fortune as spend it in gambling.", options: { A: "as well", B: "as good", C: "well", D: "as well as" }, ans: "A" },
+  { id: 134, q: "\"I am sorry, I broke your glasses.\" \"It ______.\"", options: { A: "matters not", B: "has no matter", C: "doesn't matter", D: "isn't matter" }, ans: "C" },
+  { id: 135, q: "You do not have to put on formal clothes. Something ______ will do.", options: { A: "big", B: "fancy", C: "casual", D: "elegant" }, ans: "C" },
+  { id: 136, q: "\"Is his house beautiful?\" \"There isn't ______ in the house.\"", options: { A: "much furniture", B: "many furniture", C: "a lot furniture", D: "very many furniture" }, ans: "A" },
+  { id: 137, q: "He spent all his ______ on that car.", options: { A: "safe", B: "saving", C: "safety", D: "savings" }, ans: "D" },
+  { id: 138, q: "Mrs. Baker went to the store to buy three ______ of toothpaste.", options: { A: "pieces", B: "brushes", C: "tubes", D: "loaves" }, ans: "C" },
+  { id: 139, q: "This picture looks very similar ______ the other one.", options: { A: "to", B: "with", C: "of", D: "about" }, ans: "A" },
+  { id: 140, q: "______ is a five-cent coin in America.", options: { A: "A nickle", B: "Nickle", C: "Nickles", D: "The Nickle" }, ans: "A" },
+  { id: 141, q: "Where are the ______ magazines?", options: { A: "woman", B: "women", C: "womens", D: "women's" }, ans: "D" },
+  { id: 142, q: "My friends hope you will come back again soon and ______.", options: { A: "so I do", B: "I do so", C: "so do I", D: "I too do" }, ans: "C" },
+  { id: 143, q: "He found ______ difficult to support his family.", options: { A: "this", B: "that", C: "such", D: "it" }, ans: "D" },
+  { id: 144, q: "I asked mother to let Lucy and ______ help her in the kitchen.", options: { A: "I", B: "myself", C: "me", D: "my" }, ans: "C" },
+  { id: 145, q: "I admire your beautiful voice. I think you have a gift ______ singing.", options: { A: "of", B: "about", C: "on", D: "for" }, ans: "D" },
+  { id: 146, q: "At the sight of the orphan, she felt ______ rise in her heart.", options: { A: "mother", B: "the mother", C: "a mother", D: "mothers" }, ans: "B" },
+  { id: 147, q: "There is ______ in the back room of my house.", options: { A: "a picture", B: "the another picture", C: "my picture", D: "more two pictures" }, ans: "A" },
+  { id: 148, q: "I want to congratulate you ______ your recent victory in the ball game.", options: { A: "about", B: "on", C: "for", D: "to" }, ans: "B" },
+  { id: 149, q: "I bought a pair of shoes ______.", options: { A: "at the half price", B: "at half the price", C: "half at the price", D: "the half at price" }, ans: "B" },
+  { id: 150, q: "Will you pass me ______ please.", options: { A: "salt", B: "a salt", C: "the salt", D: "salts" }, ans: "C" }
+];
 
-    // --- 完整實境狀況處置題庫 (共 5 題) ---
-    const rawSituations = [
-      {
-        id: 1,
-        title: "狀況一：營內單車車禍情境",
-        scenario: "現在時間是 0800 時，你擔任（兼任）地安官，0740 時接獲中隊（連）值日官吳大志中尉通知，中隊（連）部王小明一兵在營內駕駛單車發生車禍。",
-        tasks: [
-          "請說明你需要補充查明哪些事證？",
-          "有哪些注意事項？",
-          "現場要通知哪些單位到場？",
-          "你要回報給誰、怎麼回報？"
-        ],
-        solution: `【處置作為與報告範本】
-一、應補充查明事項：
-1. 發生確切地點（路段、轉角、營舍旁）與失事確切時間（精準至分）。
-2. 人員傷勢狀況（有無意識清醒、外傷流血、骨折、已送醫單位處置）。
-3. 事故發生型態（自摔、擦撞行人、與其他汽機車碰撞等）。
-4. 單車機械狀況（煞車是否失靈、有無反光車燈、有無戴安全帽）。
-5. 現場目擊證人證詞與天候路況（道路濕滑、施工凹坑等）。
+// =========================================================================
+// DATA REPOSITORY 3: 地面安全題庫 (60 填空 + 6 問答 + 5 實境)
+// =========================================================================
+const SAFETY_QUESTIONS = [
+  { id: 1, category: "基本組織與職責", text: "地面安全包括（失事預防）、（營內失事搶搜救）及（失事調查）三項主要工作。", answers: ["失事預防", "營內失事搶搜救", "失事調查"], keyNotes: "地安三大核心工作支柱。" },
+  { id: 2, category: "基本組織與職責", text: "地面安全其主要職責在（預防人員地面失事），工作範圍廣泛而複雜，包括影響安全之一切事務。（失事預防工作項目包含：預防失事計畫、失事預防職責、地安教育、地安督導及地安檢查、外務清除器製作使用）。", answers: ["預防人員地面失事"], keyNotes: "地安首要職責為人員防護。" },
+  { id: 3, category: "計畫與編組", text: "司令部所屬之一級單位，依基地內現況及作業程序，並參照空軍法規、技術命令及有關作戰、訓練、修護、補給、設施及職業安全等法令規章，擬訂基地（地面失事預防計畫）。計畫應涵蓋配屬及相關之單位，以統一管制之效。", answers: ["地面失事預防計畫"], keyNotes: "一級單位依各法令擬訂統一計畫。" },
+  { id: 4, category: "計畫與編組", text: "凡與地面安全作業有（直接）或（間接）關係之一切單位，不論其為（隸屬）或（配屬），均應列為失事預防計畫內編組。", answers: ["直接", "間接", "隸屬", "配屬"], keyNotes: "直間接、隸屬配屬皆納入編組。" },
+  { id: 5, category: "督導與檢查", text: "失事預防乃一連續不斷之工作，各單位按實際需要擬訂計畫付諸實施後，必須予以持續之督導，（地面安全檢查）即為最佳督導方法之一。", answers: ["地面安全檢查"], keyNotes: "最佳督導方法。" },
+  { id: 6, category: "改進建議", text: "在失事發生之前發掘影響安全潛在因素，及時提供在飛機修護、（裝備修維護）、（物流）、（運輸）、（基地勤務）、（設施營產）及地安作業程序上之改進建議，以消除導致失事之可能性。", answers: ["裝備修維護", "物流", "運輸", "基地勤務", "設施營產"], keyNotes: "事前發掘潛在危害與多面向改進。" },
+  { id: 7, category: "地安官權責", text: "各配屬單位主官，須就該單位業務範圍與要求，指定一與專長有關之優秀軍、士官，兼負地安業務；另（基地地安官）應負責督考所屬及配屬單位之地安業務。", answers: ["基地地安官"], keyNotes: "基地地安官統籌督考。" },
+  { id: 8, category: "地安官權責", text: "兼任地安官負責該單位（地面失事預防）工作之推展，如發生（地面失事），須（查明原因）、責任及建議改進辦法等，報告其上級地安業務單位。", answers: ["地面失事預防", "地面失事", "查明原因"], keyNotes: "查明原因、責任與改進辦法。" },
+  { id: 9, category: "地安官權責", text: "凡司令部所屬之一級單位，須管制（中隊）、（獨立分隊）或（同駐營區）內各單位兼任地安官人員並造冊。", answers: ["中隊", "獨立分隊", "同駐營區"], keyNotes: "兼任地安官造冊列管範圍。" },
+  { id: 10, category: "會議制度", text: "地面安全會議為失事預防工作主要部份之一，亦為地安教育方式之一，每季必須召集所屬各單位主官（管）、地安官（兼任地安官）及有關人員舉行（地面安全促進會議）一次。", answers: ["地面安全促進會議"], keyNotes: "每季召開一次。" },
+  { id: 11, category: "督導與檢查", text: "經地面安全檢查發現之缺點，旨在（改正缺失），預防地面失事，促進地面安全，如情況嚴重或改正不力致（缺點重犯）者，得視情況（簽請議處）。", answers: ["改正缺失", "缺點重犯", "簽請議處"], keyNotes: "重犯得視情況簽請議處。" },
+  { id: 12, category: "會議制度", text: "各部隊每季召開地面安全促進會議，可配合（每季督察會報）合併舉行，擴大地安會議紀錄須於會議後（5日）呈主官核閱備查。", answers: ["每季督察會報", "5日"], keyNotes: "時限：會議後5日內呈核。" },
+  { id: 13, category: "督導與檢查", text: "地面安全檢查分類計有地安（業務檢查）、（週期檢查）、（專題檢查）、（特別檢查）及（不定期檢查）等5類。", answers: ["業務檢查", "週期檢查", "專題檢查", "特別檢查", "不定期檢查"], keyNotes: "常考5類檢查劃分。" },
+  { id: 14, category: "文宣宣導", text: "地面失事公報運用分發至（分隊）、（連級）階層提供單位參考改進，並影印揭批後（張貼公布）。", answers: ["分隊", "連級", "張貼公布"], keyNotes: "下發分隊/連級揭批張貼。" },
+  { id: 15, category: "督導與檢查", text: "地安檢查在發掘影響營地地面安全之因素，提出（詳細之分析）、擬訂（改進措施）而付諸實施，並據以修訂與增強失事預防計畫。", answers: ["詳細之分析", "改進措施"], keyNotes: "分析並擬訂改進措施。" },
+  { id: 16, category: "文宣宣導", text: "地安（走廊）及（地安園地）應公布有關安全資料如：交通事故、火災、工作不慎及各種職業災害等重大事件相關資料至少（每季）更新一次，以維新穎。", answers: ["走廊", "地安園地", "每季"], keyNotes: "更新頻率：至少每季一次。" },
+  { id: 17, category: "督導與檢查", text: "地安（督導頻率）（基層單位及中隊）應1日執行1次，（大隊、作戰隊）、組、科、室、中心，2日執行1次，聯隊、指揮部（3日）執行1次。", answers: ["督導頻率", "基層單位及中隊", "大隊、作戰隊", "3日"], keyNotes: "基層/中隊每日；大隊2日；聯隊/指揮部3日。" },
+  { id: 18, category: "督導與檢查", text: "地安週期檢查，應（納編各單位兼任地安官），成立汽、機車檢查小組負責基地內（行車安全）檢查，每月至少1次，各次檢查結果應作完整之紀錄備查。", answers: ["納編各單位兼任地安官", "行車安全"], keyNotes: "汽機車檢查小組：每月至少1次。" },
+  { id: 19, category: "失事調查", text: "地面失事調查工作項目包含（失事之通知）、（組織編組）、（調查之執行）及（調查報告編製）。", answers: ["失事之通知", "組織編組", "調查之執行", "調查報告編製"], keyNotes: "調查工作四大流程項目。" },
+  { id: 20, category: "事件等級劃分", text: "地安事件等級分類計分（一級事件）、（二級事件）、（三級事件）及（四級事件）及（地安通報）。", answers: ["一級事件", "二級事件", "三級事件", "四級事件", "地安通報"], keyNotes: "區分四級事件加地安通報。" },
+  { id: 21, category: "事件等級劃分", text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（死亡3人）（含）以上，或財產毀損金額超過新臺幣1,000萬元（含）以上者，屬於一級事件。", answers: ["死亡3人", "1,000萬元"], keyNotes: "【一級事件】：死亡3人(含)以上 或 財損≥1,000萬元。" },
+  { id: 22, category: "事件等級劃分", text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（死亡2人）（含）以下，或財產毀損金額超過新臺幣600萬元（含）以上，未達新臺幣1,000萬元者，屬於二級事件。", answers: ["死亡2人"], keyNotes: "【二級事件】：死亡2人(含)以下 或 財損600萬～1,000萬元。" },
+  { id: 23, category: "事件等級劃分", text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（一、二等傷殘），或財產毀損金額超過新臺幣360萬元（含）以上，未達新臺幣600萬元者，屬於（三級事件）。", answers: ["一、二等傷殘", "三級事件"], keyNotes: "【三級事件】：一、二等傷殘 或 財損360萬～600萬元。" },
+  { id: 24, category: "事件等級劃分", text: "地安事件等級分類中，凡因地面失事，造成本軍或非本軍人員（三等傷殘或重度機能障礙），或財產毀損金額超過新臺幣100萬元（含）以上，未達新臺幣360萬元者，屬於（四級事件）。", answers: ["三等傷殘或重度機能障礙", "四級事件"], keyNotes: "【四級事件】：三等傷殘/重度機能障礙 或 財損100萬～360萬元。" },
+  { id: 25, category: "事件等級劃分", text: "地安事件等級分類中，凡因地面失事，造成造成本軍或非本軍人員（受傷或輕度機能障礙）或財產毀損，未達新臺幣100萬元者，屬於（地安通報）。", answers: ["受傷或輕度機能障礙", "地安通報"], keyNotes: "【地安通報】：受傷/輕度障礙 或 財損未達100萬元。" },
+  { id: 26, category: "通報時限", text: "地安事件發生，單位獲報後以最迅速方法，地安官或兼任地安官於（營內失事30分鐘）/（營外失事1小時）內通知司令部業務主管單位及司令部督察長室飛行安全組，並於（6小時內）完成初報與飛安服務整合電子系統建置。", answers: ["營內失事30分鐘", "營外失事1小時", "6小時內"], keyNotes: "重要時限：營內30分、營外1小時；6小時完成初報系統建置。" },
+  { id: 27, category: "責任歸屬", text: "調職人員恰於調職期間，尚未向新單位報到時之失事案件，由（原單位）為失事責任單位，若已向新單位報到後發生之失事案件，則（新單位）為失事責任單位。", answers: ["原單位", "新單位"], keyNotes: "報到前原單位負責，報到後新單位負責。" },
+  { id: 28, category: "通報與處分", text: "發生失事如為例假日或非辦公時間，由（部隊地面安全兼管單位值班人員）聯繫司令部督察長室值日官。如逾期呈報地安事件，則失職人員及直屬主管應依權責專案檢討報部。", answers: ["部隊地面安全兼管單位值班人員"], keyNotes: "假日由值班人員聯繫督察長室值日官。" },
+  { id: 29, category: "責任歸屬", text: "發生地安事件時，其失事主因經鑑定係由部隊人員因素導致者，或由環境因素所掌控，或原因不明無法澄清者，所屬單位（失事責任單位）。", answers: ["失事責任單位"], keyNotes: "人員因素、環境因素或原因不明皆由所屬單位負責。" },
+  { id: 30, category: "責任歸屬", text: "發生地安事件時，人員、裝備、車輛及設施其編制在甲單位，而為乙單位借用時，發生地面失事，則（乙單位）為失事責任單位。", answers: ["乙單位"], keyNotes: "借用期間發生失事，借用單位（乙單位）為責任單位。" },
+  { id: 31, category: "地安官權責", text: "失事預防工作之成功，有賴地安官之（能力）與（積極）之工作熱忱，審慎選任與其經常接觸，可使失事預防工作發揮至最高成效。", answers: ["能力", "積極"], keyNotes: "能力與積極熱忱。" },
+  { id: 32, category: "失事調查", text: "如失事事件涉及（故意破壞）時，由（監察人員）執行調查。", answers: ["故意破壞", "監察人員"], keyNotes: "涉及故意破壞由監察部門調查。" },
+  { id: 33, category: "通報時限", text: "地面失事發生後，單位督察科（室）須每（2）日將最新解說電傳司令部（督察長室飛安組），並登錄於（飛安服務整合系統）直至案件（完成續報）。", answers: ["2", "督察長室飛安組", "飛安服務整合系統", "完成續報"], keyNotes: "每2日電傳續報一次。" },
+  { id: 34, category: "失事調查", text: "凡因本軍活動而達致人員傷害或財產毀損（三級含以上）地安事件者，須於45日內調查完畢（如遇特殊情況，例如失事原因須等待檢驗方特能確定者，可請求延期呈報）。", answers: ["三級含以上", "45日"], keyNotes: "三級以上案件須於45日內完成調查。" },
+  { id: 35, category: "責任歸屬", text: "基地地面安全官對同駐營區單位之任何地面失事，須負責（調查）及填寫（地面失事報告），送該屬單位參辦，惟同駐營區單位有現職地面安全官時，則可由同駐營區單位自行辦理。", answers: ["調查", "地面失事報告"], keyNotes: "基地地安官具協同調查與填表權責。" },
+  { id: 36, category: "通報時限", text: "凡因地面失事導致本軍財產受損，無論損傷程度，除依規定時限通報外，失事調查必須迅速審慎，並將受損照片（一式2張）於（1日）內電傳司令部督察長室備查；另失事調查報告表亦需檢附受損照片。", answers: ["一式2張", "1日"], keyNotes: "受損照片一式2張、1日內電傳。" },
+  { id: 37, category: "計畫與編組", text: "各單位應設立（地安指示）及（地面失事案例）檔案，存作參考改進。", answers: ["地安指示", "地面失事案例"], keyNotes: "建立指示與案例專卷存檔。" },
+  { id: 38, category: "現場處置", text: "如遇地面失事，必須儘速趕赴現場，規劃（戒護區域），責適員管制失事現場，繪製（準確失事現場圖），攝取（所需照片），現場未經調查前不可搬離失事殘骸破片，正確紀錄損失情況。", answers: ["戒護區域", "準確失事現場圖", "所需照片"], keyNotes: "現場管制四大要項：戒護、繪圖、拍照、不可搬動殘骸。" },
+  { id: 39, category: "責任歸屬", text: "涉及兩個單位之地面失事調查，部隊防其他基地發生地安事件時，由（原屬基地）負責調查，距離失事現場最近之基地，則應作失事後之各項緊急處置。", answers: ["原屬基地"], keyNotes: "原屬基地主責調查，就近基地作緊急處置。" },
+  { id: 40, category: "責任歸屬", text: "凡地安事件涉及兩個單位且屬不同之基地時，如甲基地移駐至乙基地，如因指揮、通信、裝備、設施等不當而發生失事，應聯合實施失事調查，並由兩基地人員共同召開失事審查會議，由（乙基地）負責召集，會後由（失事責任單位）撰寫失事調查報告。", answers: ["乙基地", "失事責任單位"], keyNotes: "乙基地召集會議，責任單位撰寫報告。" },
+  { id: 41, category: "通報內容", text: "地安事件初報內容應包括（失事發生日期及時間）、發生地點、失事單位、（失事人員職級姓名）、失事當時任務、失事種類、（失事經過）、（初步原因分析）、（失事人員狀況）、裝備或設施損壞情形、已有之處置含憲警及醫療單位處理情形。", answers: ["失事發生日期及時間", "失事人員職級姓名", "失事經過", "初步原因分析", "失事人員狀況"], keyNotes: "初報必備要項，包含人、事、時、地、物及處置。" },
+  { id: 42, category: "地安官權責", text: "地安官應偵察存在於作戰、訓練、（修護、補給）、運輸、通電、（戰、航管）、（基地勤務）、設施、（軍械）、氣象、航醫等各項工作上影響地安之缺點。", answers: ["修護、補給", "戰、航管", "基地勤務", "軍械"], keyNotes: "地安官巡查督考之各業務專業範疇。" },
+  { id: 43, category: "地安官權責", text: "地安官應（分析及歸納）各項缺點，即時建議主官採取（必要改正措施）。", answers: ["分析及歸納", "必要改正措施"], keyNotes: "分析歸納並建議主官改進措施。" },
+  { id: 44, category: "地安官權責", text: "另（兼任地安官）負責該單位地面失事預防工作之推展，如發生地面失事，應（查明原因）、（責任）及（建議改進辦法）等，報告其上級地安業務單位。", answers: ["兼任地安官", "查明原因", "責任", "建議改進辦法"], keyNotes: "兼任地安官事故呈報三核心。" },
+  { id: 45, category: "地安官權責", text: "凡司令部所屬之一級單位，應管制中隊、獨立分隊或相等單位以上（包含同駐營區內各單位）兼任地安官人員並造冊；另（兼任地安官異動）時，須報告其（上級地安業務單位核備）。", answers: ["兼任地安官異動", "上級地安業務單位核備"], keyNotes: "人員異動需向上核備。" },
+  { id: 46, category: "職安法規", text: "依「職業安全衛生設施規則」規定之工作場所安全衛生設備、措施之最低標準，各單位應以此改善所屬不安全之（工作環境）及（個人防護裝備維護）。", answers: ["工作環境", "個人防護裝備維護"], keyNotes: "職安最低標準防護。" },
+  { id: 47, category: "職安法規", text: "各部隊、後勤指揮部及學校於部隊長下轄聯隊部、指揮部、校部應設置（職業安全衛生委員會），由工場安全檢查主管部門負責規劃及推動工場安全檢查業務。", answers: ["職業安全衛生委員會"], keyNotes: "設置職業安全衛生委員會規劃推動。" },
+  { id: 48, category: "失事調查", text: "失事調查之調查官必須儘速趕赴現場，如情況許可下，應（訪談受傷人員）並特別注意受傷人員身體上或精神上之特徵，並根據醫師診斷（記錄其受傷程度）；另亦儘速（會見目擊失事人員），以聽取失事各方面之敘述，由在場目擊人員自由敘述其所見之情況，避免採取官式詢問態度。", answers: ["訪談受傷人員", "記錄其受傷程度", "會見目擊失事人員"], keyNotes: "訪談傷者、記錄傷勢、會見目擊證人。" },
+  { id: 49, category: "工場安全", text: "繪製工作場地安全檢查要領就是防範（危險事故）的發生，藉由安全檢查的方式，來發現不安全之設備或作業行為，加強工作人員的安全意識、喚起工作人員平時注意安全、人人從觀念上重視安全，以達成零災害的理想目標。", answers: ["危險事故"], keyNotes: "安檢目的在防範危險事故、達零災害。" },
+  { id: 50, category: "現場處置", text: "各單位發生工場災害時，應派員調查，非經調查人員許可（不得移動或破壞）現場，不論有無人員傷亡，均應按規定程序處理，必要時應組成專案小組審慎處理之。", answers: ["不得移動或破壞"], keyNotes: "現場保全：非經許可不得移動或破壞。" },
+  { id: 51, category: "消防安檢", text: "滅火器應分別固定放置於取用方便之明顯處所，並以紅色、紅白相間條紋或指標，確實標明其位置，懸掛於牆壁或放置於箱中之滅火器，其上端與地面距離，十八公斤以上者不得超過（1）公尺，十八公斤以下者不得超過（1.5）公尺。", answers: ["1", "1.5"], keyNotes: "重要考點：≥18kg 不得超過1公尺；<18kg 不得超過1.5公尺。" },
+  { id: 52, category: "職安法規", text: "工作場所內為避免工作人員受噪音之危害，各單位應購置耳塞、耳罩等防護裝備，尤其超過（90）分貝者，一律要求工作人員使用噪音防護裝備。", answers: ["90"], keyNotes: "防護裝備臨界門檻：90分貝。" },
+  { id: 53, category: "職安法規", text: "燈盞裝置應採用適合工作性質之燈盞及日光燈為原則，燈泡須完全包於戴於玻璃罩中，易燃、易爆工作地區應使用（防爆燈罩）。", answers: ["防爆燈罩"], keyNotes: "易燃易爆地區嚴格要求防爆燈罩。" },
+  { id: 54, category: "職安法規", text: "高溫刺激物或有毒污染之工作場所，每5人應設置一個冷、熱水之盥洗設備，並應備有適當之（清潔劑），惟不得存放（有機溶劑）供工作人員清潔皮膚。", answers: ["清潔劑", "有機溶劑"], keyNotes: "嚴禁存放有機溶劑供清潔皮膚。" },
+  { id: 55, category: "職安法規", text: "工作場地須特別注意（光線）、（通風）、（溫度）、（濕度）等衛生設備確保人員健康。", answers: ["光線", "通風", "溫度", "濕度"], keyNotes: "衛生四要件：光、風、溫、濕。" },
+  { id: 56, category: "消防安檢", text: "各工作場所之佈置須符合工場安全要求，避免擁擠阻塞，工作場所內通道、樓梯、安全門、安全梯出入口，應設置（緊急照明設備）、（逃生方向指示燈具）等系統，俾利緊急斷電或停電時照明及逃生用。", answers: ["緊急照明設備", "逃生方向指示燈具"], keyNotes: "緊急照明與逃生指標系統。" },
+  { id: 57, category: "督導與檢查", text: "實施地面安全檢查後，受檢單位位於接獲通知，須於（3日內完成改正）工作，如無法於限期內完成時，應將其原因及預定完成日期先行填報。如（無正當理由），（超過改正時限）或是（不改正者），應簽請議處。", answers: ["3日內完成改正", "無正當理由", "超過改正時限", "不改正者"], keyNotes: "檢查缺失須於3日內完成改正。" },
+  { id: 58, category: "失事調查", text: "失事調查應注意（失事殘骸破片）於（未經調查前）不可（搬離現場），凡對肇因有價值者，均具登記其他證據及有關事實，加以正確記錄損失情況，以作研判運用。", answers: ["失事殘骸破片", "未經調查前", "搬離現場"], keyNotes: "調查前殘骸破片不可任意搬移。" }
+];
 
-二、注意事項：
-1. 救人第一：優先確保傷患立即由營區醫務所或撥打 119 送醫。
-2. 保全現場：非經調查官許可，不得任意移動單車及撞擊殘骸破片。
-3. 標記與拍照：迅速繪製現場圖並拍照至少一式2張備查。
+const SAFETY_QA = [
+  { id: 1, title: "單位肇生傷亡案件未達何項標準，得由單位自行管制？", answer: `答：\n1. 因事故就醫經手術治療後，對身體外觀或器官有所改變者（如截肢等）。\n2. 身體外觀或器官經過治療後，雖未改變，但癒後已造成原有功能喪失或障礙者（成殘）。\n3. 經主治醫師診治後開據入院許可證者。\n4. 研判將衍生後遺症（因公受傷等）。\n5. 本軍人員於休假期間（經權責主官奉核之外休假及外宿、傷亡程度為輕度機能障礙以上，酒駕肇事除外）。`, tips: "熟記 5 大自管例外排除標準（截肢改變外觀、功能成殘、開立住院許可、衍生後遺症、奉准休假輕度障礙以上非酒駕者）。" },
+  { id: 2, title: "單位肇生何項情事，不列地面失事呈報（概述6項）？", answer: `答：\n1. 各式武器，已置於發射架上，及其動力裝備起動後，所發生之各種失事。\n2. 因正常磨損或自動折（破）裂所造成之財產損失。\n3. 自裁或謀殺。\n4. 故意自行加害之損傷。\n5. 本軍人員於休假期間，造成民眾傷害及財產損失。\n6. 由飲酒、疾病、藥品、飲食不潔等所引起之疾病，及生理機能傷害。\n7. 醫療單位處方，所引發之藥物過敏性反應。\n8. 由於敵人直接行動所造成之人員傷害及財產損失。\n9. 逮捕或逃獄所造成之傷害。\n10. 已經呈報之人員傷害，痊癒後重新惡化者。\n11. 因颱風、地震、暴風雨及遭動物咬傷等天然災害所造成之人員傷亡或物資損失。`, tips: "概述6項即可：武器架起動失事、正常磨損折裂、自裁謀殺、休假傷及民眾財產、飲酒疾病食物、天災動物咬傷。" },
+  { id: 3, title: "請述明單位肇生營內失事之通知為何？", answer: `答：立即通知下列單位及人員：\n1. 失事地區之業務主管。\n2. 受傷人員之直屬主官。\n3. 醫療單位。\n4. 憲兵警衛及運輸單位。\n5. 財產保管負責主官。`, tips: "營內失事 5 大通報對象：業務主管、直屬主官、醫療單位、憲警運輸、財產保管主官。" },
+  { id: 4, title: "請述明單位肇生營外失事之通知為何？", answer: `答：地面失事如發生營區外，當事人、地面安全官或兼任地面安全業務人員，立即通知業務主管單位、當地憲警機關及有關單位或人員。`, tips: "營外通報三大主體：業務主管單位、當地憲警機關、有關人員。" },
+  { id: 5, title: "逾期或隱瞞失事事件處置？", answer: `答：各單位對於地面失事案件，如有逾期或隱瞞不報，經司令部（憲、警或其他單位通報）查獲者，有關失職人員及直屬主管應依權責專案檢討報部。`, tips: "無論逾期或隱匿，經查獲者「失職人員」與「直屬主管」均專案檢討報部。" },
+  { id: 6, title: "請述明地安督導項目（概述6項）？", answer: `答：\n1. 每日地安檢查執行情形。\n2. 有關安全規定執行情形。\n3. 地安教育與宣導執行情形。\n4. 地面失事調查報告處理情形與預防改進措施。\n5. 各項裝備操作是否確按技令及相關規定操作，有無標準作業程序。\n6. 裝備設施、基地勤務與後勤整備執行情形。\n7. 各項在職訓練、專精技訓及組合精進訓練執行情形。\n8. 行車安全規定與檢查執行情形。\n9. 任務提示、勤前教育及安全規定講解與考問。\n10. 人員生活及身心狀況。`, tips: "常背6項：每日安檢、法規執行、地安教育、技令SOP操作、裝備設施整備、行車安全與勤前教育。" }
+];
 
-三、現場通知單位：
-1. 醫務所（救護車/醫護人員馳援救治）。
-2. 營區憲兵隊/警衛排（實施交通管制與事故勘驗）。
-3. 該員直屬主官及業務主管單位。
+const SAFETY_SITUATIONS = [
+  {
+    id: 1,
+    title: "狀況一：營內單車車禍情境",
+    scenario: "現在時間是 0800 時，你擔任（兼任）地安官，0740 時接獲中隊（連）值日官吳大志中尉通知，中隊（連）部王小明一兵在營內駕駛單車發生車禍。",
+    tasks: ["請說明你需要補充查明哪些事證？", "有哪些注意事項？", "現場要通知哪些單位到場？", "你要回報給誰、怎麼回報？"],
+    solution: `【處置作為與報告範本】\n一、應補充查明事項：\n1. 確切地點與時間（精準至分）。\n2. 人員傷勢狀況（意識外傷流血、骨折送醫處置）。\n3. 事故型態（自摔、擦撞、對撞）。\n4. 單車機械狀況與安全裝備。\n5. 目擊證人與天候路況。\n\n二、注意事項：\n1. 救人第一：優先確保傷患立即就醫。\n2. 保全現場：非經許可不得移動車輛與殘骸。\n3. 繪製現場圖並拍照一式2張備查。\n\n三、現場通知單位：醫務所、營區憲兵/警衛排、直屬主官及業務主管。\n\n四、通報回報程序：\n營內失事應於「30分鐘內」電話速報司令部主管業務處及督察長室飛安組，6小時內完成系統初報。`
+  },
+  {
+    id: 2,
+    title: "狀況二：機裝推移骨折情境",
+    scenario: "現在時間是 1100 時，你擔任（兼任）地安官，接獲勤務分隊回報 0930 時吳安東中士執行發電機裝備推移跌倒遭裝備壓傷，左小腿骨折。",
+    tasks: ["請說明你需要補充查明哪些事證？", "有哪些注意事項？", "現場要通知哪些單位到場？", "你要回報給誰、怎麼回報？"],
+    solution: `【處置作為與報告範本】\n一、應補充查明事項：\n1. 推移編組是否符SOP規範（人數、指揮手）。\n2. 場地路面狀況（油滑、斜坡、障礙）。\n3. 防護具（PPE）著裝情形。\n4. 診斷證明（是否需開刀入院）。\n\n二、注意事項：\n1. 固定患部後送就醫，暫停推移作業。\n2. 開立入院許可證已達呈報標準，絕不可私自管制。\n\n三、現場通知單位：基地醫務所、工場安檢主管部門、單位主官。\n\n四、通報回報程序：\n營內失事30分鐘內通報，6小時內系統初報，1日內電傳照片一式2張。`
+  },
+  {
+    id: 3,
+    title: "狀況三：休假車禍對撞情境",
+    scenario: "現在時間是凌晨 0200 時，接獲中隊回報 0110 時吳奕致中士休假騎乘機車（AK-8989）行經南投市區與民眾自小客車（AED-9453）碰撞。",
+    tasks: ["你需要補充查明哪些事證？", "有哪些注意事項？", "你要回報給誰、怎麼回報？"],
+    solution: `【處置作為與報告範本】\n一、應補充查明事項：\n1. 雙方人員傷亡送醫與急救情形。\n2. 關鍵酒測值（確認有無酒駕違法情事）。\n3. 路權號誌、行車記錄器與監視器畫面。\n4. 承辦派出所與案號。\n\n二、注意事項：若涉酒駕屬重大軍紀地安事件絕不可隱匿；派幹部協處家屬並尊重交通隊勘驗。\n\n三、回報程序：\n營外失事「1小時內」通報司令部主管業務及督察長室飛安組；假日深夜聯繫督察長室值日官；6小時內登錄系統初報。`
+  },
+  {
+    id: 4,
+    title: "狀況四：軍車擦撞情境",
+    scenario: "1400 時接獲回報 1330 時吳吉億中士駕駛軍車（軍C-66123）在屏東萬丹與民用大貨車擦撞（無酒駕），人員無傷、軍車掉漆。",
+    tasks: ["請說明你需要補充查明哪些事證？", "有哪些注意事項？", "你要回報給誰、怎麼回報？"],
+    solution: `【處置作為與報告範本】\n一、應補充查明事項：出車派車單、路憑、行車紀錄器、警方酒測證明聯單。\n\n二、注意事項：警方未到場前切勿擅離；損壞極輕屬「地安通報」等級；受損照片一式2張備查。\n\n三、回報程序：營外失事1小時內通報、6小時內完成初報登錄。`
+  },
+  {
+    id: 5,
+    title: "狀況五：營區草堆失火處置情境",
+    scenario: "1400 接獲回報 1330 集合場雜草堆冒出火花，士官長金價勇率員及時撲滅，無人傷財損，惟煙霧遭民眾拍攝並報案消防隊到場。",
+    tasks: ["請說明你要如何建議幹部處置？", "有哪些注意事項？", "你要回報給誰、怎麼回報？"],
+    solution: `【處置作為與報告範本】\n一、建議幹部立即處置：拉水線徹底翻動底層降溫殘火；向抵達之消防隊主動說明已撲滅並請其熱顯像儀複查；防範輿情爆料。\n\n二、注意事項：嚴禁營區焚燒雜草；滅火器用畢即送充藥劑。\n\n三、回報程序：\n雖無傷損，但「民人拍攝與消防車到場」具新聞敏感度，應30分鐘內電話速報戰情與地安科，6小時內依「地安通報」暨「輿情反映」登錄。`
+  }
+];
 
-四、通報與回報程序：
-1. 營內失事應於「30分鐘內」以電話速報司令部業務主管單位及督察長室飛安組。
-2. 6小時內完成初報作業與登錄「飛安服務整合系統」。
-3. 初報內容：失事時間、地點、單位、王小明一兵姓名、事發經過、初判原因、傷勢病況與已處置作為。`
-      },
-      {
-        id: 2,
-        title: "狀況二：機裝推移骨折情境",
-        scenario: "現在時間是 1100 時，你擔任（兼任）地安官，接獲所屬勤務連（分隊）回報 0930 時，吳安東中士執行發電機裝備推移，推移過程跌倒遭裝備壓傷，人員左小腿骨折。",
-        tasks: [
-          "請說明你需要補充查明哪些事證？",
-          "有哪些注意事項？",
-          "現場要通知哪些單位到場？",
-          "你要回報給誰、怎麼回報？"
-        ],
-        solution: `【處置作為與報告範本】
-一、應補充查明事項：
-1. 發電機裝備重量、型式，以及當時推移人員編組是否符合標準作業程序（SOP要求人數、指揮手）。
-2. 作業場地狀況（地面是否油滑、坡道斜度、障礙物阻礙）。
-3. 個人防護裝備（PPE）著裝情形（安全鞋、手套、反光背心等）。
-4. 吳員送醫醫院、主治醫師開具之骨折診斷書（是否屬重度機能障礙或需開刀住院）。
-5. 是否涉及違規單人推移、機械推桿故障等關鍵主因。
+// =========================================================================
+// APPLICATION CONTROLLER STATE
+// =========================================================================
+let currentBank = 'maintenance'; // 'maintenance' | 'english' | 'safety'
+let isDarkMode = localStorage.getItem('app_dark_mode') === 'true';
 
-二、注意事項：
-1. 立即固定骨折患部，避免二次傷害，盡速後送國軍醫院就醫。
-2. 暫停該項推移作業，嚴禁移動該發電機裝備及周邊現場。
-3. 骨折案件若經主治醫師開立入院許可證，已達地安呈報標準，不可列為私下自管。
+// MCQ State (for Maintenance & English)
+let mcqData = [];
+let mcqActiveList = [];
+let mcqUserAnswers = {};
+let mcqPage = 1;
+const MCQ_PAGE_SIZE = 15;
+let mcqIsExam = false;
+let mcqShowAnswers = false;
+let mcqFilterWrongOnly = false;
 
-三、現場通知單位：
-1. 基地醫務所/救護車（緊急救護後送）。
-2. 工場安全檢查主管部門（職安小組現場勘驗）。
-3. 單位主官及業務主管。
+// Safety State
+let safetyRevealed = {};
+let safetyQuizState = { active: false, questions: [], currentIndex: 0, score: 0 };
 
-四、通報與回報程序：
-1. 營內失事 30 分鐘內電話通報司令部主管業務處及督察長室飛安組（本案 0930 發生，1100 獲報已延遲，應立即補報並說明遲報原因，防止遭列隱瞞逾期議處）。
-2. 6 小時內完成系統初報，拍照一式2張於1日內電傳。
-3. 查明是否涉及三級/四級事件等級，由基地地安官介入調查。`
-      },
-      {
-        id: 3,
-        title: "狀況三：休假車禍對撞情境",
-        scenario: "現在時間是凌晨 0200 時，你擔任（兼任）地安官，接獲所屬中隊（連）回報 0110 時，中隊（連）部吳奕致中士，休假期間騎乘機車（車號：AK-8989）行經南投縣市區與民眾汽車（車號：AED-9453）碰撞。",
-        tasks: [
-          "你需要補充查明哪些事證？",
-          "有哪些注意事項？",
-          "你要回報給誰、怎麼回報？"
-        ],
-        solution: `【處置作為與報告範本】
-一、應補充查明事項：
-1. 雙方人員傷亡程度（吳士及對方駕駛/乘客之受傷送醫狀況、意識及急救情形）。
-2. 酒測值（至關重要：確認吳士與對方是否有酒駕違法行為）。
-3. 事故確切路口、路權歸屬（號誌狀態、轉彎/直行、行車記錄器及路口監視器）。
-4. 吳士休假核准情況（是否為奉核之外休/外宿/慰休）、有無無照或越級駕駛。
-5. 處理警局（交通隊警員姓名、分局、案號）。
+// =========================================================================
+// INITIALIZATION
+// =========================================================================
+window.addEventListener('DOMContentLoaded', () => {
+  // Theme init
+  if (isDarkMode) document.documentElement.classList.add('dark');
+  updateThemeIcons();
 
-二、注意事項：
-1. 若涉及酒後駕車，屬於重大違紀失事，絕不得隱匿，將直接列入軍紀地安檢討。
-2. 關懷人員傷勢，指派幹部或輔導長前往醫院協處家屬。
-3. 營外事故應尊重當地交通警察勘驗，記錄初判表，避免現場口角衝突。
+  // Load Database fallback if not loaded from external script
+  if (!MAINTENANCE_DATA || MAINTENANCE_DATA.length === 0) {
+    if (typeof FULL_DB !== 'undefined') {
+      MAINTENANCE_DATA = FULL_DB;
+    }
+  }
 
-三、回報對象與程序：
-1. 營外失事應於「1小時內」以最迅速方式通知司令部業務主管單位及督察長室飛安組。
-2. 假日或深夜非辦公時間，值班人員應聯繫司令部督察長室「值日官」。
-3. 依初報格式於 6 小時內將人、車、時、地、傷勢、酒精濃度、初步責任登錄飛安服務整合系統。`
-      },
-      {
-        id: 4,
-        title: "狀況四：軍車擦撞情境",
-        scenario: "現在時間是 1400 時，你擔任（兼任）地安官，接獲所屬中隊（連）回報 1330 時，中隊（連）部吳吉億中士駕駛軍車（車號：軍C-66123）行經屏東縣萬丹鄉萬丹路二段與大昌路口，與民用大貨車擦撞（雙方無酒駕），人員無傷、軍車輕微掉漆。",
-        tasks: [
-          "請說明你需要補充查明哪些事證？",
-          "有哪些注意事項？",
-          "你要回報給誰、怎麼回報？"
-        ],
-        solution: `【處置作為與報告範本】
-一、應補充查明事項：
-1. 出車派遣事由：派車單、行車路憑、任務性質、有無車長隨車督導。
-2. 行車紀錄器影片、路口號誌及碰撞點（輕微擦痕長度、民車損壞程度與預估賠償金額）。
-3. 雙方酒測單（已確認均為0.00mg/L，須取得警察開具之證明）。
-4. 承辦派出所與承辦警員姓名，交通事故當事人登記聯單編號。
+  // Set default bank
+  switchBank('maintenance');
+  initSafetyCategories();
+  populateSafetyJump();
+  renderSafetyQA();
+  renderSafetySituations();
+});
 
-二、注意事項：
-1. 保全現場標線與拍照：在警察未到場繪測前不可擅自駛離，避免肇事逃逸爭議。
-2. 財產損失評估：若財產損失未達100萬元且無人員傷亡，依標準屬「地安通報」等級。
-3. 受損照片一式2張須留存備查。
+function toggleTheme() {
+  isDarkMode = !isDarkMode;
+  localStorage.setItem('app_dark_mode', isDarkMode);
+  document.documentElement.classList.toggle('dark', isDarkMode);
+  updateThemeIcons();
+}
 
-三、回報對象與回報方式：
-1. 營外失事於「1小時內」通報上級業務主管處與督察長室飛安組。
-2. 於 6 小時內完成初報作業並登錄系統。
-3. 回報內容：車號軍C-66123、駕駛吳吉億中士、1330時、萬丹路口與民用大貨車擦撞、人員無傷、無酒駕、雙方車損極輕、刻由交通警察處理中。`
-      },
-      {
-        id: 5,
-        title: "狀況五：營區草堆失火處置情境",
-        scenario: "現在時間是 1400 時，你擔任（兼任）地安官，接獲所屬中隊（連）回報 1330 時，集合場雜草堆突冒出火花，士官長金價勇士官長帶領幹部及時撲滅火勢，人員及財產均無損，惟所產生之煙霧遭民人拍攝並通知消防隊到場。",
-        tasks: [
-          "請說明你要如何建議幹部處置？",
-          "有哪些注意事項？",
-          "你要回報給誰、怎麼回報？"
-        ],
-        solution: `【處置作為與報告範本】
-一、建議幹部立即處置作為：
-1. 殘火巡查與降溫：雖然火勢撲滅，應立即拉水線徹底澆灌翻動草堆底層，杜絕死灰復燃。
-2. 消防隊對接：營門留引導人員，向趕抵之地方消防隊主動說明火勢已於1330完全撲滅、無人傷亡，並協請消防隊員入內做最終紅外線熱顯像複查確認。
-3. 查明起火源頭：調查是否為亂丟菸蒂、割草機火花、玻璃折射聚焦或電線走火。
-4. 輿情與發言管制：向營區門口拍照民人客氣說明已依SOP撲滅，並回報政戰部門掌握社群媒體爆料輿情。
+function updateThemeIcons() {
+  document.getElementById('sunIcon').classList.toggle('hidden', !isDarkMode);
+  document.getElementById('moonIcon').classList.toggle('hidden', isDarkMode);
+}
 
-二、注意事項：
-1. 營區嚴禁私自焚燒雜草或落葉，違者觸犯空污法及軍紀要求。
-2. 滅火器取用後應立即集中更換藥劑填充，並檢視使用型式（乾粉/水劑）。
-3. 避免與拍攝民眾發生衝突，由政戰與警衛人員依權責應處。
+// Switch between Question Banks
+function switchBank(bankKey) {
+  currentBank = bankKey;
+  document.getElementById('bankSelector').value = bankKey;
 
-三、回報對象與程序：
-1. 營內突發火災事故，30分鐘內以電話速報基地戰情室、主官、督察科及司令部地安業務主管。
-2. 雖然人員無傷、無裝備財損，但因「引來民眾拍攝及地方消防車到場」，極易引發新聞關注，必須以「地安通報」兼「輿情反映」於 6 小時內登錄初報系統。
-3. 回報範例：「報告戰情室/地安科：本部集合場草堆於1330疑因高溫冒火，經士官長金價勇率員即刻撲滅，無人員財損，消防隊到場確認無安全顧慮已離去，後續加強草料清除與菸蒂清查。」`
-      }
-    ];
+  const titleEl = document.getElementById('currentBankTitleText');
+  const countBadge = document.getElementById('bankCountBadge');
+  const subEl = document.getElementById('bankSubtitleText');
+  const badgeIcon = document.getElementById('bankBadgeIcon');
 
-    // --- 系統應用狀態 ---
-    let appState = {
-      favorites: JSON.parse(localStorage.getItem('gnd_safety_favs') || '[]'),
-      isDark: localStorage.getItem('gnd_safety_dark') === 'true',
-      filterCategory: 'all',
-      onlyFavs: false,
-      revealedAnswers: {}, // id -> bool
-      quizState: {
-        active: false,
-        questions: [],
-        currentIndex: 0,
-        score: 0,
-        userAnswers: {}
-      }
-    };
+  const viewMcq = document.getElementById('view-mcq');
+  const viewSafety = document.getElementById('view-safety');
 
-    // --- 初始載入 ---
-    window.addEventListener('DOMContentLoaded', () => {
-      // 處理系統主題
-      if (appState.isDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      updateThemeIcons();
+  if (bankKey === 'maintenance') {
+    titleEl.innerText = '修護標準化測考題庫';
+    countBadge.innerText = '500題';
+    subEl.innerText = '全500題空軍修護標準化測驗互動練習系統';
+    badgeIcon.innerText = '修';
+    badgeIcon.className = 'w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-lg shadow-md flex-shrink-0';
 
-      // 初始化分類標籤與跳題選單
-      initCategories();
-      populateJumpSelect();
+    viewMcq.classList.remove('hidden');
+    viewSafety.classList.add('hidden');
 
-      // 渲染題目
-      renderStudyQuestions();
-      renderQASection();
-      renderSituationsSection();
-      updateFavBadge();
+    mcqData = [...MAINTENANCE_DATA];
+    startNewMcqQuiz();
+  } else if (bankKey === 'english') {
+    titleEl.innerText = '英文原題模擬考題庫';
+    countBadge.innerText = '150題';
+    subEl.innerText = '完整收錄原題試卷共 150 題互動模擬練習';
+    badgeIcon.innerText = '英';
+    badgeIcon.className = 'w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-lg shadow-md flex-shrink-0';
+
+    viewMcq.classList.remove('hidden');
+    viewSafety.classList.add('hidden');
+
+    mcqData = [...ENGLISH_DATA];
+    startNewMcqQuiz();
+  } else if (bankKey === 'safety') {
+    titleEl.innerText = '地面安全互動題庫測驗系統';
+    countBadge.innerText = '60+6+5全收錄';
+    subEl.innerText = '基地地面失事預防、查處、職安設施規範與處置題庫';
+    badgeIcon.innerText = '地';
+    badgeIcon.className = 'w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-black text-lg shadow-md flex-shrink-0';
+
+    viewMcq.classList.add('hidden');
+    viewSafety.classList.remove('hidden');
+
+    renderSafetyStudy();
+  }
+}
+
+// =========================================================================
+// MCQ MODULE IMPLEMENTATION (修護 & 英文)
+// =========================================================================
+function handleMcqModeChange() {
+  startNewMcqQuiz();
+}
+
+function startNewMcqQuiz() {
+  const mode = document.getElementById('mcqModeSelect').value;
+  mcqUserAnswers = {};
+  mcqPage = 1;
+  mcqShowAnswers = false;
+  mcqFilterWrongOnly = false;
+  document.getElementById('mcqFilterWrongBtn').classList.remove('bg-amber-100', 'text-amber-800');
+
+  const submitBtn = document.getElementById('mcqSubmitExamBtn');
+
+  if (mode === 'practice') {
+    mcqIsExam = false;
+    mcqActiveList = [...mcqData];
+    submitBtn.classList.add('hidden');
+  } else {
+    mcqIsExam = true;
+    submitBtn.classList.remove('hidden');
+    let count = 20;
+    if (mode === 'exam-50') count = 50;
+    if (mode === 'exam-100') count = 100;
+    if (mode === 'exam-all') count = mcqData.length;
+    mcqActiveList = [...mcqData].sort(() => 0.5 - Math.random()).slice(0, count);
+  }
+
+  document.getElementById('mcqSearchInput').value = '';
+  renderMcqList();
+}
+
+function renderMcqList() {
+  const container = document.getElementById('mcqListContainer');
+  container.innerHTML = '';
+
+  let listToRender = mcqActiveList;
+
+  // Filter wrong only if enabled
+  if (mcqFilterWrongOnly) {
+    listToRender = listToRender.filter(item => {
+      const u = mcqUserAnswers[item.id];
+      return u && u !== (item.a || item.ans);
     });
+  }
 
-    // --- 主題切換 ---
-    function toggleTheme() {
-      appState.isDark = !appState.isDark;
-      localStorage.setItem('gnd_safety_dark', appState.isDark);
-      if (appState.isDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
+  // Pagination calculation
+  const total = listToRender.length;
+  const totalPages = Math.ceil(total / MCQ_PAGE_SIZE) || 1;
+  if (mcqPage > totalPages) mcqPage = totalPages;
+
+  const start = (mcqPage - 1) * MCQ_PAGE_SIZE;
+  const pageItems = listToRender.slice(start, start + MCQ_PAGE_SIZE);
+
+  if (pageItems.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+        <p class="text-slate-400 text-sm">無符合條件的題目。</p>
+      </div>
+    `;
+    document.getElementById('mcqPaginationBar').classList.add('hidden');
+    updateMcqStats();
+    return;
+  }
+  document.getElementById('mcqPaginationBar').classList.remove('hidden');
+  document.getElementById('mcqPageIndicator').innerText = `第 ${mcqPage} / ${totalPages} 頁 (共 ${total} 題)`;
+
+  pageItems.forEach((qItem, index) => {
+    const card = document.createElement('div');
+    card.className = "bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4";
+    card.id = `mcq-card-${qItem.id}`;
+
+    const correctAns = qItem.a || qItem.ans;
+    const userChoice = mcqUserAnswers[qItem.id];
+
+    let optButtons = '';
+    ['A', 'B', 'C', 'D'].forEach(letter => {
+      let optText = qItem.options ? qItem.options[letter] : '';
+      if (!optText && qItem.o) optText = qItem.o[letter.charCodeAt(0) - 65];
+
+      let btnClass = 'opt-btn text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium w-full flex items-center gap-2';
+
+      if (userChoice) {
+        if (letter === correctAns) {
+          btnClass += ' opt-selected-correct';
+        } else if (userChoice === letter) {
+          btnClass += ' opt-selected-wrong';
+        }
+      } else if (mcqShowAnswers && letter === correctAns) {
+        btnClass += ' opt-selected-correct';
       }
-      updateThemeIcons();
-    }
 
-    function updateThemeIcons() {
-      const sun = document.getElementById('sunIcon');
-      const moon = document.getElementById('moonIcon');
-      if (appState.isDark) {
-        sun.classList.remove('hidden');
-        moon.classList.add('hidden');
-      } else {
-        sun.classList.add('hidden');
-        moon.classList.remove('hidden');
-      }
-    }
+      const disabledAttr = (userChoice && !mcqIsExam) ? 'disabled' : '';
 
-    // --- 頁籤切換 ---
-    function switchTab(tabKey) {
-      const tabs = ['study', 'quiz', 'qa', 'search'];
-      tabs.forEach(k => {
-        document.getElementById(`panel-${k}`).classList.add('hidden');
-        const btn = document.getElementById(`tabBtn-${k}`);
-        btn.classList.remove('tab-active');
-        btn.classList.add('text-slate-600', 'dark:text-slate-400');
-      });
-
-      document.getElementById(`panel-${tabKey}`).classList.remove('hidden');
-      const activeBtn = document.getElementById(`tabBtn-${tabKey}`);
-      activeBtn.classList.add('tab-active');
-      activeBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
-
-      if (tabKey === 'study') {
-        renderStudyQuestions();
-      }
-    }
-
-    // --- 收藏功能 ---
-    function toggleFavorite(id, e) {
-      if (e) e.stopPropagation();
-      const idx = appState.favorites.indexOf(id);
-      if (idx > -1) {
-        appState.favorites.splice(idx, 1);
-      } else {
-        appState.favorites.push(id);
-      }
-      localStorage.setItem('gnd_safety_favs', JSON.stringify(appState.favorites));
-      updateFavBadge();
-      renderStudyQuestions();
-    }
-
-    function updateFavBadge() {
-      document.getElementById('favCountBadge').innerText = appState.favorites.length;
-    }
-
-    function filterFavorites() {
-      appState.onlyFavs = !appState.onlyFavs;
-      const btn = document.getElementById('favoriteViewBtn');
-      if (appState.onlyFavs) {
-        btn.classList.add('ring-2', 'ring-amber-500', 'bg-amber-50', 'dark:bg-amber-950');
-      } else {
-        btn.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-50', 'dark:bg-amber-950');
-      }
-      switchTab('study');
-      renderStudyQuestions();
-    }
-
-    function resetFilter() {
-      appState.onlyFavs = false;
-      appState.filterCategory = 'all';
-      const btn = document.getElementById('favoriteViewBtn');
-      btn.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-50', 'dark:bg-amber-950');
-      document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('bg-brand-600', 'text-white'));
-      const allPill = document.getElementById('cat-pill-all');
-      if (allPill) allPill.classList.add('bg-brand-600', 'text-white');
-      renderStudyQuestions();
-    }
-
-    // --- 初始化篩選膠囊 ---
-    function initCategories() {
-      const cats = Array.from(new Set(rawQuestions.map(q => q.category)));
-      const container = document.getElementById('categoryPillContainer');
-      container.innerHTML = `
-        <button id="cat-pill-all" onclick="selectCategory('all')" class="cat-pill px-3 py-1.5 rounded-full font-medium transition bg-brand-600 text-white shadow-sm">
-          全部 (${rawQuestions.length})
+      optButtons += `
+        <button class="${btnClass}" onclick="selectMcqAnswer(${qItem.id}, '${letter}')" ${disabledAttr}>
+          <span class="font-bold min-w-[20px]">(${letter})</span>
+          <span>${optText}</span>
         </button>
       `;
+    });
 
-      cats.forEach(c => {
-        const count = rawQuestions.filter(q => q.category === c).length;
-        const btn = document.createElement('button');
-        btn.className = `cat-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-300`;
-        btn.innerText = `${c} (${count})`;
-        btn.onclick = () => selectCategory(c, btn);
-        container.appendChild(btn);
-      });
-    }
-
-    function selectCategory(cat, targetBtn) {
-      appState.filterCategory = cat;
-      document.querySelectorAll('.cat-pill').forEach(btn => {
-        btn.classList.remove('bg-brand-600', 'text-white');
-        btn.classList.add('bg-slate-200', 'text-slate-700', 'dark:bg-slate-700', 'dark:text-slate-300');
-      });
-
-      if (cat === 'all') {
-        document.getElementById('cat-pill-all').classList.add('bg-brand-600', 'text-white');
-      } else if (targetBtn) {
-        targetBtn.classList.remove('bg-slate-200', 'text-slate-700', 'dark:bg-slate-700', 'dark:text-slate-300');
-        targetBtn.classList.add('bg-brand-600', 'text-white');
-      }
-      renderStudyQuestions();
-    }
-
-    function populateJumpSelect() {
-      const sel = document.getElementById('jumpSelect');
-      sel.innerHTML = rawQuestions.map(q => `<option value="${q.id}">第 ${q.id} 題 - ${q.category}</option>`).join('');
-    }
-
-    function jumpToQuestion(qid) {
-      const el = document.getElementById(`q-card-${qid}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('ring-2', 'ring-brand-500');
-        setTimeout(() => el.classList.remove('ring-2', 'ring-brand-500'), 1600);
-      }
-    }
-
-    // --- STREAMING_CHUNK:Rendering Study Mode Cards ---
-    function renderStudyQuestions() {
-      const container = document.getElementById('questionsContainer');
-      let filtered = rawQuestions.filter(q => {
-        if (appState.filterCategory !== 'all' && q.category !== appState.filterCategory) return false;
-        if (appState.onlyFavs && !appState.favorites.includes(q.id)) return false;
-        return true;
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-2 text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <p class="text-slate-400 text-base">查無符合條件的題目。</p>
-            <button onclick="resetFilter()" class="mt-3 px-4 py-2 text-sm bg-brand-600 text-white rounded-lg">清除篩選條件</button>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = filtered.map(q => {
-        const isFav = appState.favorites.includes(q.id);
-        const isRevealed = !!appState.revealedAnswers[q.id];
-
-        // 格式化挖空題目文字
-        let formattedText = q.text;
-        q.answers.forEach(ans => {
-          const maskedSpan = `<span onclick="toggleSingleAnswer(${q.id}, this)" class="mask-answer ${isRevealed ? 'mask-revealed' : ''}">${isRevealed ? ans : '【 點擊揭曉 】'}</span>`;
-          // 替換括號內文本
-          formattedText = formattedText.split(`（${ans}）`).join(`（${maskedSpan}）`);
-        });
-
-        return `
-          <div id="q-card-${q.id}" class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/90 dark:border-slate-700/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-300">
-                    第 ${q.id} 題
-                  </span>
-                  <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-300">
-                    ${q.category}
-                  </span>
-                </div>
-
-                <button onclick="toggleFavorite(${q.id}, event)" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="收藏標記">
-                  <svg class="w-5 h-5 ${isFav ? 'text-amber-500 fill-amber-500' : 'fill-none stroke-current'}" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                  </svg>
-                </button>
-              </div>
-
-              <!-- 題幹主體 -->
-              <p class="text-sm sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 font-medium">
-                ${formattedText}
-              </p>
-            </div>
-
-            <!-- 解析與答案切換列 -->
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs">
-              <div class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <span class="font-bold text-slate-600 dark:text-slate-300">💡 重點備註:</span>
-                <span>${q.keyNotes}</span>
-              </div>
-              <button onclick="toggleCardAnswer(${q.id})" class="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold hover:bg-slate-200">
-                ${isRevealed ? '隱藏' : '顯示答案'}
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function toggleCardAnswer(qid) {
-      appState.revealedAnswers[qid] = !appState.revealedAnswers[qid];
-      renderStudyQuestions();
-    }
-
-    function toggleSingleAnswer(qid, element) {
-      // 點選個別遮罩單獨顯示
-      element.classList.toggle('mask-revealed');
-      const q = rawQuestions.find(i => i.id === qid);
-      if (element.classList.contains('mask-revealed')) {
-        // 尋找其對應字串
-        const idx = Array.from(element.parentNode.querySelectorAll('.mask-answer')).indexOf(element);
-        if (q && q.answers[idx]) {
-          element.innerText = q.answers[idx];
-        }
-      } else {
-        element.innerText = '【 點擊揭曉 】';
-      }
-    }
-
-    function toggleAllAnswers(show) {
-      rawQuestions.forEach(q => {
-        appState.revealedAnswers[q.id] = show;
-      });
-      renderStudyQuestions();
-    }
-
-    // --- STREAMING_CHUNK:Rendering QA & Situation Sections ---
-    function renderQASection() {
-      const container = document.getElementById('qaContainer');
-      container.innerHTML = rawQA.map(item => `
-        <div class="qa-item bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-          <button onclick="toggleAccordion('qa-ans-${item.id}', this)" class="w-full p-4 sm:p-5 text-left flex items-start justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/40 transition">
-            <div class="flex items-start gap-3">
-              <span class="flex-shrink-0 w-7 h-7 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 font-bold flex items-center justify-center text-sm">
-                ${item.id}
-              </span>
-              <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 pt-0.5">
-                ${item.title}
-              </h3>
-            </div>
-            <svg class="chevron-icon w-5 h-5 text-slate-400 flex-shrink-0 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-
-          <div id="qa-ans-${item.id}" class="hidden p-5 pt-1 border-t border-slate-100 dark:border-slate-700/60 space-y-3 bg-slate-50/50 dark:bg-slate-900/40">
-            <pre class="font-sans text-sm leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-line">${item.answer}</pre>
-            <div class="text-xs p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 font-medium">
-              💡 記憶口訣／解題關鍵：${item.tips}
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderSituationsSection() {
-      const container = document.getElementById('situationsContainer');
-      container.innerHTML = rawSituations.map(sit => `
-        <div class="situation-item bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-          <div class="p-5 border-b border-slate-100 dark:border-slate-700/80 bg-gradient-to-r from-red-500/10 via-transparent to-transparent flex items-start justify-between">
-            <div>
-              <span class="text-xs font-bold px-2 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">實境演練 ${sit.id}</span>
-              <h3 class="text-lg font-bold text-slate-800 dark:text-white mt-1">${sit.title}</h3>
-            </div>
-            <button onclick="toggleAccordion('sit-content-${sit.id}', this)" class="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-semibold transition">
-              展開完整範本
-            </button>
-          </div>
-
-          <div class="p-5 space-y-4 text-sm">
-            <div class="p-3.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300 leading-relaxed">
-              <span class="font-bold text-slate-900 dark:text-slate-100">📌 題目情境背景：</span><br>
-              ${sit.scenario}
-            </div>
-
-            <div>
-              <div class="font-bold text-slate-800 dark:text-slate-200 mb-2">📋 答題任務清單：</div>
-              <ul class="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-300 pl-1">
-                ${sit.tasks.map(t => `<li>${t}</li>`).join('')}
-              </ul>
-            </div>
-
-            <!-- 可折疊之官方標準處置作為 -->
-            <div id="sit-content-${sit.id}" class="hidden space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-              <div class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                地面安全官標準處置要項與通報回報範例：
-              </div>
-              <pre class="font-sans text-xs sm:text-sm bg-slate-100 dark:bg-slate-900/90 p-4 rounded-xl text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed border border-slate-200 dark:border-slate-700">${sit.solution}</pre>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function toggleAccordion(id, btn) {
-      const panel = document.getElementById(id);
-      const isHidden = panel.classList.contains('hidden');
-      panel.classList.toggle('hidden');
-      const icon = btn.querySelector('.chevron-icon');
-      if (icon) {
-        icon.classList.toggle('rotate-180', isHidden);
-      }
-    }
-
-    function toggleAllQA() {
-      rawQA.forEach(item => {
-        const el = document.getElementById(`qa-ans-${item.id}`);
-        if (el) el.classList.toggle('hidden');
-      });
-    }
-
-    function toggleAllSituations() {
-      rawSituations.forEach(sit => {
-        const el = document.getElementById(`sit-content-${sit.id}`);
-        if (el) el.classList.toggle('hidden');
-      });
-    }
-
-    // --- STREAMING_CHUNK:Implementing Quiz System Logic ---
-    function startQuiz(count) {
-      const shuffled = [...rawQuestions].sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, Math.min(count, rawQuestions.length));
-
-      appState.quizState = {
-        active: true,
-        questions: selected,
-        currentIndex: 0,
-        score: 0,
-        userAnswers: {}
-      };
-
-      document.getElementById('quizSetupCard').classList.add('hidden');
-      document.getElementById('quizResultPanel').classList.add('hidden');
-      document.getElementById('quizRunningPanel').classList.remove('hidden');
-
-      renderActiveQuizQuestion();
-    }
-
-    function renderActiveQuizQuestion() {
-      const { questions, currentIndex, score } = appState.quizState;
-      const current = questions[currentIndex];
-
-      document.getElementById('quizProgressText').innerText = `第 ${currentIndex + 1} / ${questions.length} 題`;
-      document.getElementById('quizScoreText').innerText = `${score} 題答對`;
-
-      // 替換填空欄位為可輸入框
-      let questionHtml = current.text;
-      current.answers.forEach((ans, idx) => {
-        const inputId = `quiz-input-${currentIndex}-${idx}`;
-        const inputTag = `
-          <input type="text" id="${inputId}" placeholder="輸入【${idx+1}】" autocomplete="off" class="mx-1 px-2.5 py-1 text-sm rounded-lg border-2 border-brand-400 focus:border-brand-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none w-36 text-center font-bold">
-        `;
-        questionHtml = questionHtml.replace(`（${ans}）`, `（${inputTag}）`);
-      });
-
-      const card = document.getElementById('quizQuestionCard');
-      card.innerHTML = `
-        <div class="flex items-center justify-between text-xs text-slate-400">
-          <span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 font-semibold text-slate-600 dark:text-slate-300">原題號：第 ${current.id} 題</span>
-          <span>類別：${current.category}</span>
-        </div>
-
-        <div class="text-base sm:text-lg leading-relaxed text-slate-800 dark:text-slate-100">
-          ${questionHtml}
-        </div>
-
-        <div id="quizFeedbackBox" class="hidden p-3 rounded-xl text-sm font-medium"></div>
-
-        <div class="pt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-700">
-          <button onclick="revealQuizAnswer()" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            不會作答？查看解答
-          </button>
-          <div class="flex gap-2">
-            <button id="quizSubmitBtn" onclick="submitCurrentQuizAnswer()" class="px-5 py-2 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-700 transition">
-              核對答案
-            </button>
-            <button id="quizNextBtn" onclick="nextQuizQuestion()" class="hidden px-5 py-2 rounded-xl bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 font-medium hover:opacity-90 transition">
-              下一題 ➔
-            </button>
-          </div>
+    let feedbackHtml = '';
+    if (userChoice && !mcqIsExam) {
+      const isRight = userChoice === correctAns;
+      feedbackHtml = `
+        <div class="p-3 rounded-xl text-xs sm:text-sm font-medium ${isRight ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200'}">
+          ${isRight ? '✔ 回答正確！' : `✖ 回答錯誤。正確答案為：<strong>(${correctAns}) ${qItem.options[correctAns]}</strong>`}
         </div>
       `;
     }
 
-    function submitCurrentQuizAnswer() {
-      const { questions, currentIndex } = appState.quizState;
-      const current = questions[currentIndex];
-      let allCorrect = true;
-      let userList = [];
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-slate-700 text-brand-600 dark:text-brand-300 font-bold text-xs">
+            題號 ${qItem.id}
+          </span>
+          <span class="text-xs text-slate-400">單選題</span>
+        </div>
+        <div>
+          ${userChoice ? (userChoice === correctAns ? '<span class="text-xs font-bold text-emerald-600">答對</span>' : '<span class="text-xs font-bold text-rose-600">答錯</span>') : '<span class="text-xs text-slate-400">未作答</span>'}
+        </div>
+      </div>
+      <div class="text-sm sm:text-base font-semibold leading-relaxed">
+        ${qItem.q}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+        ${optButtons}
+      </div>
+      ${feedbackHtml}
+    `;
 
-      current.answers.forEach((ans, idx) => {
-        const input = document.getElementById(`quiz-input-${currentIndex}-${idx}`);
-        const userVal = input ? input.value.trim() : '';
-        userList.push(userVal);
+    container.appendChild(card);
+  });
 
-        // 寬鬆關鍵字比對
-        const isMatch = userVal && (ans.includes(userVal) || userVal.includes(ans) || ans.replace(/\s+/g,'') === userVal.replace(/\s+/g,''));
-        if (input) {
-          if (isMatch) {
-            input.classList.remove('border-brand-400');
-            input.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950');
-          } else {
-            input.classList.remove('border-brand-400');
-            input.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-950');
-            allCorrect = false;
-          }
-          input.disabled = true;
-        }
-      });
+  updateMcqStats();
+}
 
-      const fb = document.getElementById('quizFeedbackBox');
-      fb.classList.remove('hidden');
+function selectMcqAnswer(qid, choice) {
+  mcqUserAnswers[qid] = choice;
+  renderMcqList();
+}
 
-      if (allCorrect) {
-        appState.quizState.score++;
-        fb.className = "p-3 rounded-xl text-sm font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
-        fb.innerHTML = `🎉 完全正確！標準答案：【${current.answers.join('】、【')}】`;
-      } else {
-        fb.className = "p-3 rounded-xl text-sm font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300";
-        fb.innerHTML = `⚠️ 有部分答案不符。標準解答為：<strong class="underline">【${current.answers.join('】、【')}】</strong><br><span class="text-xs font-normal">💡 解析備註：${current.keyNotes}</span>`;
-      }
+function updateMcqStats() {
+  const answeredCount = Object.keys(mcqUserAnswers).length;
+  let correctCount = 0;
+  let wrongCount = 0;
 
-      document.getElementById('quizScoreText').innerText = `${appState.quizState.score} 題答對`;
-      document.getElementById('quizSubmitBtn').classList.add('hidden');
-      document.getElementById('quizNextBtn').classList.remove('hidden');
+  for (let qid in mcqUserAnswers) {
+    const item = mcqData.find(x => x.id == qid);
+    if (item) {
+      const correctAns = item.a || item.ans;
+      if (mcqUserAnswers[qid] === correctAns) correctCount++;
+      else wrongCount++;
     }
+  }
 
-    function revealQuizAnswer() {
-      const { questions, currentIndex } = appState.quizState;
-      const current = questions[currentIndex];
-      current.answers.forEach((ans, idx) => {
-        const input = document.getElementById(`quiz-input-${currentIndex}-${idx}`);
-        if (input) {
-          input.value = ans;
-          input.classList.add('border-amber-500');
-        }
-      });
-      submitCurrentQuizAnswer();
-    }
+  document.getElementById('mcqStatTotal').innerText = mcqActiveList.length;
+  document.getElementById('mcqStatAnswered').innerText = answeredCount;
+  document.getElementById('mcqStatCorrect').innerText = correctCount;
+  document.getElementById('mcqStatWrong').innerText = wrongCount;
+  const acc = answeredCount > 0 ? ((correctCount / answeredCount) * 100).toFixed(1) : 0;
+  document.getElementById('mcqStatAccuracy').innerText = `${acc}%`;
+}
 
-    function nextQuizQuestion() {
-      appState.quizState.currentIndex++;
-      if (appState.quizState.currentIndex >= appState.quizState.questions.length) {
-        finishQuiz();
-      } else {
-        renderActiveQuizQuestion();
-      }
-    }
+function mcqPrevPage() {
+  if (mcqPage > 1) {
+    mcqPage--;
+    renderMcqList();
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  }
+}
 
-    function finishQuiz() {
-      document.getElementById('quizRunningPanel').classList.add('hidden');
-      const resPanel = document.getElementById('quizResultPanel');
-      resPanel.classList.remove('hidden');
+function mcqNextPage() {
+  const totalPages = Math.ceil(mcqActiveList.length / MCQ_PAGE_SIZE);
+  if (mcqPage < totalPages) {
+    mcqPage++;
+    renderMcqList();
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  }
+}
 
-      const total = appState.quizState.questions.length;
-      const score = appState.quizState.score;
-      const rate = Math.round((score / total) * 100);
+function handleMcqSearch() {
+  const q = document.getElementById('mcqSearchInput').value.trim().toLowerCase();
+  if (!q) {
+    mcqActiveList = [...mcqData];
+  } else if (!isNaN(q)) {
+    const num = parseInt(q);
+    mcqActiveList = mcqData.filter(i => i.id === num);
+  } else {
+    mcqActiveList = mcqData.filter(i => {
+      const qText = i.q.toLowerCase();
+      const opts = Object.values(i.options || {}).join(' ').toLowerCase();
+      return qText.includes(q) || opts.includes(q);
+    });
+  }
+  mcqPage = 1;
+  renderMcqList();
+}
 
-      document.getElementById('quizScoreSummary').innerHTML = `
-        您在本次共 <span class="font-bold text-brand-600">${total}</span> 題中，答對了 <span class="font-bold text-emerald-600">${score}</span> 題。<br>
-        正確率：<span class="text-3xl font-extrabold text-brand-600">${rate}%</span>
-      `;
+function toggleMcqAnswers() {
+  mcqShowAnswers = !mcqShowAnswers;
+  renderMcqList();
+}
 
-      let advice = "";
-      if (rate >= 90) {
-        advice = "🎖️ 太卓越了！您對地面安全各項法規、失事通報時限與職安規定已瞭若指掌，具備高度專業地安官水準！";
-      } else if (rate >= 70) {
-        advice = "👍 表現不錯！核心流程大致掌握，建議加強失事等級金額、滅火器高度及通報時效細節。";
-      } else {
-        advice = "📚 仍需努力！建議切換至「模式一：循序研讀」，利用隱藏答案進行自我遮蔽覆誦，把關鍵字深植腦海！";
-      }
-      document.getElementById('quizResultAdvice').innerText = advice;
-    }
+function toggleFilterWrong() {
+  mcqFilterWrongOnly = !mcqFilterWrongOnly;
+  const btn = document.getElementById('mcqFilterWrongBtn');
+  if (mcqFilterWrongOnly) {
+    btn.classList.add('bg-amber-100', 'text-amber-800');
+    btn.innerText = '顯示全部題目';
+  } else {
+    btn.classList.remove('bg-amber-100', 'text-amber-800');
+    btn.innerText = '只看錯題';
+  }
+  mcqPage = 1;
+  renderMcqList();
+}
 
-    function restartQuiz() {
-      document.getElementById('quizResultPanel').classList.add('hidden');
-      document.getElementById('quizSetupCard').classList.remove('hidden');
-    }
+function resetMcqProgress() {
+  mcqUserAnswers = {};
+  mcqShowAnswers = false;
+  mcqFilterWrongOnly = false;
+  renderMcqList();
+}
 
-    // --- STREAMING_CHUNK:Global Search Implementation ---
-    function executeSearch(keyword) {
-      keyword = keyword.trim().toLowerCase();
-      const countEl = document.getElementById('searchResultsCount');
-      const listEl = document.getElementById('searchResultsList');
+function submitExam() {
+  let correctCount = 0;
+  mcqActiveList.forEach(item => {
+    const correctAns = item.a || item.ans;
+    if (mcqUserAnswers[item.id] === correctAns) correctCount++;
+  });
+  const total = mcqActiveList.length;
+  const score = Math.round((correctCount / total) * 100);
 
-      if (!keyword) {
-        countEl.innerText = "請輸入字串開始搜尋";
-        listEl.innerHTML = "";
-        return;
-      }
+  document.getElementById('modalScoreText').innerText = `${score} 分`;
+  document.getElementById('modalDetailText').innerText = `本次測驗共 ${total} 題，答對 ${correctCount} 題，答錯 ${Object.keys(mcqUserAnswers).length - correctCount} 題，未作答 ${total - Object.keys(mcqUserAnswers).length} 題。`;
+  document.getElementById('scoreModal').classList.remove('hidden');
+  document.getElementById('scoreModal').classList.add('flex');
 
-      let matches = [];
+  mcqIsExam = false;
+  document.getElementById('mcqSubmitExamBtn').classList.add('hidden');
+  renderMcqList();
+}
 
-      // 搜尋 60 題
-      rawQuestions.forEach(q => {
-        if (q.text.toLowerCase().includes(keyword) || q.keyNotes.toLowerCase().includes(keyword) || q.category.toLowerCase().includes(keyword)) {
-          matches.push({ type: '填空題', id: q.id, title: `第 ${q.id} 題 [${q.category}]`, content: q.text, note: q.keyNotes });
-        }
-      });
+function closeScoreModal() {
+  document.getElementById('scoreModal').classList.add('hidden');
+  document.getElementById('scoreModal').classList.remove('flex');
+}
 
-      // 搜尋 6 題問答
-      rawQA.forEach(qa => {
-        if (qa.title.toLowerCase().includes(keyword) || qa.answer.toLowerCase().includes(keyword)) {
-          matches.push({ type: '問答題', id: qa.id, title: `問答題第 ${qa.id} 題：${qa.title}`, content: qa.answer, note: qa.tips });
-        }
-      });
+// =========================================================================
+// GROUND SAFETY SYSTEM MODULE (地安專區)
+// =========================================================================
+let safetyCurrentCategory = 'all';
 
-      // 搜尋 5 題情境
-      rawSituations.forEach(sit => {
-        if (sit.title.toLowerCase().includes(keyword) || sit.scenario.toLowerCase().includes(keyword) || sit.solution.toLowerCase().includes(keyword)) {
-          matches.push({ type: '實境題', id: sit.id, title: `實境題 ${sit.id}：${sit.title}`, content: sit.scenario + "\n" + sit.solution, note: "實境處置標準SOP" });
-        }
-      });
+function switchSafetyTab(tab) {
+  ['study', 'quiz', 'qa', 'search'].forEach(t => {
+    document.getElementById(`safetyPanel-${t}`).classList.add('hidden');
+    const btn = document.getElementById(`safetyTabBtn-${t}`);
+    btn.className = 'px-3.5 py-2 rounded-xl transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap';
+  });
 
-      countEl.innerText = `搜尋「${keyword}」，共找到 ${matches.length} 筆相符內容`;
+  document.getElementById(`safetyPanel-${tab}`).classList.remove('hidden');
+  const activeBtn = document.getElementById(`safetyTabBtn-${tab}`);
+  activeBtn.className = 'px-3.5 py-2 rounded-xl transition bg-brand-600 text-white font-bold whitespace-nowrap';
 
-      if (matches.length === 0) {
-        listEl.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-800 rounded-xl">找不到與「${keyword}」相符的題目或處置要點。</div>`;
-        return;
-      }
+  if (tab === 'study') renderSafetyStudy();
+}
 
-      listEl.innerHTML = matches.map(m => {
-        // 高亮關鍵字
-        const highlightedTitle = m.title.replace(new RegExp(keyword, 'gi'), match => `<mark class="bg-amber-200 dark:bg-amber-800 text-slate-900 dark:text-white px-1 rounded">${match}</mark>`);
-        const highlightedContent = m.content.replace(new RegExp(keyword, 'gi'), match => `<mark class="bg-yellow-200 dark:bg-yellow-800 text-slate-900 dark:text-white px-1 rounded">${match}</mark>`);
+function initSafetyCategories() {
+  const cats = Array.from(new Set(SAFETY_QUESTIONS.map(q => q.category)));
+  const container = document.getElementById('safetyCategoryContainer');
+  container.innerHTML = `
+    <button onclick="filterSafetyCat('all')" id="scat-all" class="px-3 py-1.5 rounded-full font-medium transition bg-brand-600 text-white">
+      全部 (${SAFETY_QUESTIONS.length})
+    </button>
+  `;
+  cats.forEach(c => {
+    const count = SAFETY_QUESTIONS.filter(q => q.category === c).length;
+    const btn = document.createElement('button');
+    btn.className = 'px-3 py-1.5 rounded-full font-medium transition bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300';
+    btn.id = `scat-${c}`;
+    btn.innerText = `${c} (${count})`;
+    btn.onclick = () => filterSafetyCat(c);
+    container.appendChild(btn);
+  });
+}
 
-        let badgeColor = "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
-        if (m.type === '問答題') badgeColor = "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
-        if (m.type === '實境題') badgeColor = "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300";
+function filterSafetyCat(cat) {
+  safetyCurrentCategory = cat;
+  document.querySelectorAll('#safetyCategoryContainer button').forEach(b => {
+    b.className = 'px-3 py-1.5 rounded-full font-medium transition bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300';
+  });
+  const act = document.getElementById(`scat-${cat}`);
+  if (act) act.className = 'px-3 py-1.5 rounded-full font-medium transition bg-brand-600 text-white';
+  renderSafetyStudy();
+}
 
-        return `
-          <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
-            <div class="flex items-center gap-2">
-              <span class="text-xs px-2 py-0.5 rounded-full font-bold ${badgeColor}">${m.type}</span>
-              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${highlightedTitle}</h4>
-            </div>
-            <div class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed pl-1">
-              ${highlightedContent}
-            </div>
+function populateSafetyJump() {
+  const sel = document.getElementById('safetyJumpSelect');
+  sel.innerHTML = SAFETY_QUESTIONS.map(q => `<option value="${q.id}">第 ${q.id} 題 - ${q.category}</option>`).join('');
+}
+
+function jumpSafetyQuestion(qid) {
+  const el = document.getElementById(`safety-card-${qid}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('ring-2', 'ring-brand-500');
+    setTimeout(() => el.classList.remove('ring-2', 'ring-brand-500'), 1500);
+  }
+}
+
+function renderSafetyStudy() {
+  const container = document.getElementById('safetyQuestionsContainer');
+  let list = SAFETY_QUESTIONS;
+  if (safetyCurrentCategory !== 'all') {
+    list = list.filter(q => q.category === safetyCurrentCategory);
+  }
+
+  container.innerHTML = list.map(q => {
+    const isRevealed = !!safetyRevealed[q.id];
+    let formattedText = q.text;
+    q.answers.forEach((ans, idx) => {
+      const spanHtml = `<span onclick="toggleSafetyMask(${q.id}, this, ${idx})" class="mask-answer ${isRevealed ? 'mask-revealed' : ''}">${isRevealed ? ans : '【 點擊揭曉 】'}</span>`;
+      formattedText = formattedText.split(`（${ans}）`).join(`（${spanHtml}）`);
+    });
+
+    return `
+      <div id="safety-card-${q.id}" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3 flex flex-col justify-between">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="px-2.5 py-1 rounded bg-brand-50 dark:bg-slate-700 font-bold text-brand-600 dark:text-brand-300">第 ${q.id} 題</span>
+            <span class="text-slate-400">${q.category}</span>
           </div>
-        `;
-      }).join('');
+          <p class="text-sm sm:text-base leading-relaxed font-medium">
+            ${formattedText}
+          </p>
+        </div>
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs">
+          <span class="text-slate-400">💡 考點：${q.keyNotes}</span>
+          <button onclick="toggleSingleSafetyAns(${q.id})" class="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-700 font-semibold text-slate-600 dark:text-slate-300">
+            ${isRevealed ? '隱藏' : '顯示答案'}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleSafetyMask(qid, el, idx) {
+  el.classList.toggle('mask-revealed');
+  const q = SAFETY_QUESTIONS.find(i => i.id === qid);
+  if (el.classList.contains('mask-revealed')) {
+    if (q && q.answers[idx]) el.innerText = q.answers[idx];
+  } else {
+    el.innerText = '【 點擊揭曉 】';
+  }
+}
+
+function toggleSingleSafetyAns(qid) {
+  safetyRevealed[qid] = !safetyRevealed[qid];
+  renderSafetyStudy();
+}
+
+function toggleAllSafetyAnswers(show) {
+  SAFETY_QUESTIONS.forEach(q => safetyRevealed[q.id] = show);
+  renderSafetyStudy();
+}
+
+// Safety QA
+function renderSafetyQA() {
+  const container = document.getElementById('safetyQAContainer');
+  container.innerHTML = SAFETY_QA.map(item => `
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+      <button onclick="toggleAccordion('sqa-ans-${item.id}', this)" class="w-full p-4 text-left flex items-start justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <div class="flex items-start gap-3">
+          <span class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 font-bold flex items-center justify-center text-xs flex-shrink-0">
+            ${item.id}
+          </span>
+          <h3 class="font-bold text-sm sm:text-base">${item.title}</h3>
+        </div>
+        <svg class="w-5 h-5 text-slate-400 flex-shrink-0 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div id="sqa-ans-${item.id}" class="hidden p-4 pt-1 border-t border-slate-100 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-900/40 text-xs sm:text-sm space-y-2">
+        <pre class="font-sans whitespace-pre-line leading-relaxed text-slate-700 dark:text-slate-200">${item.answer}</pre>
+        <div class="p-2 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 text-xs font-medium">💡 解題關鍵：${item.tips}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSafetySituations() {
+  const container = document.getElementById('safetySituationsContainer');
+  container.innerHTML = SAFETY_SITUATIONS.map(sit => `
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div class="p-4 border-b border-slate-100 dark:border-slate-700/80 bg-red-500/10 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-bold px-2 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">演練 ${sit.id}</span>
+          <h3 class="font-bold text-base mt-1">${sit.title}</h3>
+        </div>
+        <button onclick="toggleAccordion('sit-panel-${sit.id}', this)" class="text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 font-semibold shadow-sm">
+          展開處置範本
+        </button>
+      </div>
+      <div class="p-4 space-y-3 text-xs sm:text-sm">
+        <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+          <strong>📌 狀況情境：</strong><br>${sit.scenario}
+        </div>
+        <div>
+          <strong>📋 任務清單：</strong>
+          <ul class="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-300 pt-1">
+            ${sit.tasks.map(t => `<li>${t}</li>`).join('')}
+          </ul>
+        </div>
+        <div id="sit-panel-${sit.id}" class="hidden pt-3 border-t border-slate-200 dark:border-slate-700">
+          <pre class="font-sans text-xs sm:text-sm bg-slate-100 dark:bg-slate-900 p-4 rounded-xl whitespace-pre-line leading-relaxed">${sit.solution}</pre>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleAccordion(panelId, btn) {
+  const p = document.getElementById(panelId);
+  p.classList.toggle('hidden');
+  const icon = btn.querySelector('svg');
+  if (icon) icon.classList.toggle('rotate-180');
+}
+
+function toggleAllSafetyQA() {
+  SAFETY_QA.forEach(i => document.getElementById(`sqa-ans-${i.id}`).classList.toggle('hidden'));
+}
+
+function toggleAllSafetySituations() {
+  SAFETY_SITUATIONS.forEach(s => document.getElementById(`sit-panel-${s.id}`).classList.toggle('hidden'));
+}
+
+// Safety Search
+function executeSafetySearch(keyword) {
+  keyword = keyword.trim().toLowerCase();
+  const countEl = document.getElementById('safetySearchResultsCount');
+  const listEl = document.getElementById('safetySearchResultsList');
+
+  if (!keyword) {
+    countEl.innerText = "請輸入關鍵字進行地安專屬檢索";
+    listEl.innerHTML = "";
+    return;
+  }
+
+  let matches = [];
+  SAFETY_QUESTIONS.forEach(q => {
+    if (q.text.toLowerCase().includes(keyword) || q.keyNotes.toLowerCase().includes(keyword)) {
+      matches.push({ type: '填空題', id: q.id, title: `第 ${q.id} 題 [${q.category}]`, content: q.text });
     }
-  </script>
+  });
+  SAFETY_QA.forEach(qa => {
+    if (qa.title.toLowerCase().includes(keyword) || qa.answer.toLowerCase().includes(keyword)) {
+      matches.push({ type: '問答題', id: qa.id, title: `問答題第 ${qa.id} 題：${qa.title}`, content: qa.answer });
+    }
+  });
+  SAFETY_SITUATIONS.forEach(sit => {
+    if (sit.title.toLowerCase().includes(keyword) || sit.scenario.toLowerCase().includes(keyword) || sit.solution.toLowerCase().includes(keyword)) {
+      matches.push({ type: '實境題', id: sit.id, title: `實境題 ${sit.id}：${sit.title}`, content: sit.scenario + "\n" + sit.solution });
+    }
+  });
+
+  countEl.innerText = `搜尋「${keyword}」，找到 ${matches.length} 筆資料`;
+  listEl.innerHTML = matches.map(m => `
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
+      <div class="flex items-center gap-2">
+        <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold">${m.type}</span>
+        <h4 class="font-bold text-sm">${m.title}</h4>
+      </div>
+      <div class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed">${m.content}</div>
+    </div>
+  `).join('');
+}
+</script>
 </body>
 </html>
